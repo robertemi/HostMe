@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Matches</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#13a4ec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101c22",
+            },
+            fontFamily: {
+              display: ["Plus Jakarta Sans", "Noto Sans", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              lg: "1rem",
+              xl: "1.5rem",
+              full: "9999px"
+            },
+          },
+        },
+      };
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      }
+      .material-symbols-outlined.filled {
+        font-variation-settings: 'FILL' 1,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+      }
+    </style>
+<style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden pb-20">
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="text-gray-800 dark:text-gray-200 flex size-12 shrink-0 items-center">
+<span class="material-symbols-outlined text-2xl">search</span>
+</div>
+<h2 class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Matches</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 bg-transparent text-gray-800 dark:text-gray-200 gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+<span class="material-symbols-outlined text-2xl">more_vert</span>
+</button>
+</div>
+</div>
+<div class="flex-grow px-4">
+<div class="flex items-center gap-4 bg-white dark:bg-gray-800/50 rounded-xl px-4 min-h-[80px] py-2 justify-between mb-3 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" data-alt="Profile picture of Olivia" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCU8JyVYkU_QUiBbqPfkafrJXMopROq8Ylzl5NBBDIV8BtXcbmshjx19yM89ES7WwCrFZ4IBrnJ91JwcZaj1VRfUGS8br_qPIZMesDfuifdcAr8nKokMNAoKoItsQnUwycO5dBkXuRdHB7oIJP-JsYZZ-tnqf218EBkyQVdH5_dfoYfEA5BfBFA1P4WKvPCoro1COnqs3c-3hwMplhoBZ4PcJZPRm9gPjnV6yKS1M8WPUs5kZu-2OmvkHOLUYbTnzFZJ9nwSh4s5tI");'></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800/50 rounded-full"></div>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-gray-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">Olivia</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal line-clamp-1">Hey, how are you?</p>
+</div>
+</div>
+<div class="shrink-0 flex flex-col items-end gap-1">
+<p class="text-gray-500 dark:text-gray-400 text-xs font-normal leading-normal">2h ago</p>
+<div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-white dark:bg-gray-800/50 rounded-xl px-4 min-h-[80px] py-2 justify-between mb-3 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" data-alt="Profile picture of Liam" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDkLM_2irjdwNvQ_E9E5qFpZoll3UZpmmPCetvGldDRWwVZdr4F4k8ZbsTtBbOtc2tISxBD0kQr0Vx9ab1tyfzcWo_ArXzlpxAlabfuBay1lcu6d3rNhv1OQJD5lon3O3fV0lf6ujYPrDVS1u5Obz3aZj4ttWiojGyQrczQMox1g_nMvxX_LTSp0Q1pmdD-UUWeokVpovs9BkTI9uja5TsNUh_8m5hysYf6j9iJwwb9gN8BCTY-HSqYWXMqr2kNp_lYRSmKQbwRIgs");'></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800/50 rounded-full"></div>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-gray-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">Liam</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal line-clamp-1">Sounds good!</p>
+</div>
+</div>
+<div class="shrink-0">
+<p class="text-gray-500 dark:text-gray-400 text-xs font-normal leading-normal">4h ago</p>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-white dark:bg-gray-800/50 rounded-xl px-4 min-h-[80px] py-2 justify-between mb-3 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" data-alt="Profile picture of Sophia" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDp0Ih2NeWp-2UKlVgqBCTL5VmB3bXinedeTqOA0D7e25nt4y_1CpN1oaajuop3ZUtaJ8C_Usx7mRSnJToi4aAhloG4h-kq-sCwhumoMGrmSLYoj_HgiXWrgRgzhN973Gt6a-gpR2PlZbNifF2ulSlp31W2xZwrpj0Gb0W_VS_zIktj3V3VR6mlRseKG717qPamXLosxkhintrTU1ZhmprPyGUmHYYISs-qmJnvcfjZ_akkhoxhH-JN1pYKvUOpi9Va4o-otaWI_z4");'></div>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-gray-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">Sophia</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal line-clamp-1">See you then!</p>
+</div>
+</div>
+<div class="shrink-0">
+<p class="text-gray-500 dark:text-gray-400 text-xs font-normal leading-normal">1d ago</p>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-white dark:bg-gray-800/50 rounded-xl px-4 min-h-[80px] py-2 justify-between mb-3 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" data-alt="Profile picture of Noah" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBRoyx_YaNqf6gaPxMEFv9-thlPUqiTRLg6OjDOYa7G_FxH4lFJ260hUG-ueEMi5O5xCA-x03SNgdv9AIFqFc8uodBG-ZHeSls3Uu5okDE4a35n1iGhJAUbgXlMAemN-irvlASopWBfHi8MHwRt5tXE3CbInGciBWfhD05Iw2MvuwsPfqBYIPcu8x8Ury2DfXG7hmyeKaNqLt5M40vdV5DJmjv73PbKh3T5OWoiwFg3nfJxqJDgNs-6sf0ZmER-In-00n4Pt-Gly5M");'></div>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-gray-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">Noah</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal line-clamp-1">Let's do it.</p>
+</div>
+</div>
+<div class="shrink-0">
+<p class="text-gray-500 dark:text-gray-400 text-xs font-normal leading-normal">3d ago</p>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center text-center py-20 px-4">
+<div class="text-primary flex size-24 shrink-0 items-center justify-center mb-6">
+<span class="material-symbols-outlined !text-7xl">group_add</span>
+</div>
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">No matches yet</h3>
+<p class="text-gray-500 dark:text-gray-400 mb-6">Keep exploring to find your perfect roommate!</p>
+<button class="flex max-w-sm cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 bg-primary px-6 text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0"> Find Roommates </button>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background-dark/80 backdrop-blur-sm p-2 z-20">
+<div class="flex justify-around items-center">
+<a class="flex flex-col items-center justify-center gap-1 text-gray-500 dark:text-gray-400 w-1/4 py-1" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-gray-500 dark:text-gray-400 w-1/4 py-1" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-xs font-medium">Discover</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-primary w-1/4 py-1" href="#">
+<span class="material-symbols-outlined filled">favorite</span>
+<span class="text-xs font-bold">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-gray-500 dark:text-gray-400 w-1/4 py-1" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-xs font-medium">Profile</span>
+</a>
+</div>
+</div>
+</div>
+
+</body></html>

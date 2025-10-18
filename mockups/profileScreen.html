@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Housing App - User Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#13a4ec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101c22",
+            },
+            fontFamily: {
+              display: ["Plus Jakarta Sans", "Noto Sans", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              lg: "1rem",
+              xl: "1.5rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      }
+    </style>
+<style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<button class="text-slate-800 dark:text-slate-200 flex size-12 shrink-0 items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h2 class="text-slate-900 dark:text-slate-50 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">My Profile</h2>
+<button class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0 px-4 py-2">Edit</button>
+</div>
+<div class="p-4 @container">
+<div class="w-full flex flex-col gap-4 items-center">
+<div class="relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-32 w-32" data-alt="A portrait of Alex Doe, a young person smiling." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDvRIQv8YvAJHj_deLuzTj17x4m2AQ2-Kiv_VhLP-0nrhei3f-WXSD0pB0wCrxy1nKjC99D1De7yehDFg4QLSlXkbbPlyb7wHRIxOXxVxyqEfwIDqfTCMf9Z_IOOIJAtxylCNH4LOQYc7mCEZHxKejKambeIAbVsKmCWRB4OLDb30RDqAv20hLfmiEII2guTh7ctwjzgxq2tk9JV39kO0n57qJeGE723onLuLJ6yWL_QLh8hEb94tbF9jsu9q-dru9AADZLZCtfKes");'></div>
+<button class="absolute bottom-0 right-0 bg-primary text-white rounded-full h-8 w-8 flex items-center justify-center">
+<span class="material-symbols-outlined text-base">edit</span>
+</button>
+</div>
+<div class="flex flex-col items-center justify-center">
+<p class="text-slate-900 dark:text-slate-50 text-[22px] font-bold leading-tight tracking-[-0.015em] text-center">Alex Doe, 22</p>
+<p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-normal text-center mt-1 max-w-md">Aspiring software engineer and avid hiker. Looking for a clean and quiet place to live with like-minded individuals.</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 p-4 pt-0">
+<div class="flex gap-6 justify-between">
+<p class="text-slate-800 dark:text-slate-200 text-sm font-medium leading-normal">Profile Completion</p>
+<p class="text-primary text-sm font-bold">75%</p>
+</div>
+<div class="rounded-full bg-slate-200 dark:bg-slate-700 h-2">
+<div class="h-2 rounded-full bg-primary" style="width: 75%"></div>
+</div>
+</div>
+<div class="px-4 pb-3 pt-5">
+<h2 class="text-slate-900 dark:text-slate-50 text-[22px] font-bold leading-tight tracking-[-0.015em]">Interests</h2>
+</div>
+<div class="flex gap-3 p-3 flex-wrap pr-4 -mt-2">
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary/20 pl-4 pr-4">
+<p class="text-primary font-medium leading-normal text-sm">Music</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-200 dark:bg-slate-800 pl-4 pr-4">
+<p class="text-slate-800 dark:text-slate-200 text-sm font-medium leading-normal">Sports</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary/20 pl-4 pr-4">
+<p class="text-primary font-medium leading-normal text-sm">Gaming</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary/20 pl-4 pr-4">
+<p class="text-primary font-medium leading-normal text-sm">Hiking</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-200 dark:bg-slate-800 pl-4 pr-4">
+<p class="text-slate-800 dark:text-slate-200 text-sm font-medium leading-normal">Cooking</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-200 dark:bg-slate-800 pl-4 pr-4">
+<p class="text-slate-800 dark:text-slate-200 text-sm font-medium leading-normal">Traveling</p>
+</div>
+<div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full border border-dashed border-slate-400 dark:border-slate-600 pl-4 pr-4">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400 text-lg">add</span>
+<p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">Add</p>
+</div>
+</div>
+<div class="px-4 pb-3 pt-5">
+<h2 class="text-slate-900 dark:text-slate-50 text-[22px] font-bold leading-tight tracking-[-0.015em]">Preferences</h2>
+</div>
+<div class="px-4 space-y-6">
+<div>
+<label class="text-slate-800 dark:text-slate-200 text-base font-medium leading-normal mb-2 block">Looking For</label>
+<div class="grid grid-cols-3 gap-2 rounded-lg bg-slate-200 dark:bg-slate-800 p-1">
+<button class="bg-primary text-white rounded-md py-2 text-sm font-bold">Roommate</button>
+<button class="text-slate-600 dark:text-slate-400 rounded-md py-2 text-sm font-medium">Place</button>
+<button class="text-slate-600 dark:text-slate-400 rounded-md py-2 text-sm font-medium">Both</button>
+</div>
+</div>
+<div>
+<label class="text-slate-800 dark:text-slate-200 text-base font-medium leading-normal" for="budget">Budget Range</label>
+<div class="flex justify-between text-slate-600 dark:text-slate-400 text-sm mt-1">
+<span>$500</span>
+<span>$1500</span>
+</div>
+<input class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer [&amp;::-webkit-slider-thumb]:bg-primary [&amp;::-moz-range-thumb]:bg-primary" max="1500" min="500" type="range" value="1000"/>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-slate-800 dark:text-slate-200 font-medium">Cleanliness</span>
+<span class="text-primary font-bold">Very Tidy</span>
+</div>
+<div class="relative h-2 rounded-full bg-slate-200 dark:bg-slate-700">
+<div class="absolute h-2 w-10/12 rounded-full bg-primary"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-slate-800 dark:text-slate-200 font-medium">Noise Level</span>
+<span class="text-primary font-bold">Quiet</span>
+</div>
+<div class="relative h-2 rounded-full bg-slate-200 dark:bg-slate-700">
+<div class="absolute h-2 w-2/12 rounded-full bg-primary"></div>
+</div>
+<div class="flex justify-between items-center pt-2">
+<span class="text-slate-800 dark:text-slate-200 font-medium">Smoking</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-slate-800 dark:text-slate-200 font-medium">Pets</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-4 pb-3 pt-8">
+<h2 class="text-slate-900 dark:text-slate-50 text-[22px] font-bold leading-tight tracking-[-0.015em]">Activity</h2>
+</div>
+<div class="px-4">
+<div class="border-b border-slate-200 dark:border-slate-700">
+<nav aria-label="Tabs" class="-mb-px flex space-x-8">
+<a class="border-primary text-primary whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm" href="#">Matches <span class="bg-primary text-white text-xs font-bold ml-1 px-2 py-0.5 rounded-full">3</span></a>
+<a class="border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" href="#">Past Swipes</a>
+<a class="border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" href="#">Liked You</a>
+</nav>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 pb-24">
+<div class="flex flex-col items-center gap-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl w-full" data-alt="Profile picture of Sarah" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDJ_6Z7mBWGsM2nNkNDNQmMKOdDjnbpKxWXFmLCnxoKfH9om2p9JCrJbgoQdVCwWZWTnS9KROM0hcA4knm5w8ppfHMTavOrMiieMzCUdRI11tjSYBpeAQwu0Y4Qd9WBEC4rwP8pxFuEwqRtsyYzvlspATH4SZiQ6om7wbI0N44w8seG7eXIwmNO-IIgCLiUQO2a_3XFTfHp2AE1KcmL91N41y_DN1M1FylReBlhXUK72e8Bi2nuTo922j6GNmMZt_Yh5ADMBwCNgok");'></div>
+<p class="text-slate-800 dark:text-slate-200 text-sm font-medium">Sarah, 21</p>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl w-full" data-alt="Profile picture of Mike" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCTVALgfMC_usA_02702ROQC3Sum0Rv0mLMxtzgBzpIDxt7vN5zmNmfc7mg_yKskXHNOr3zAuqUSYxQghgJFuClHQl5UNg5tD4qerZyYFr3VdEwC1SmUgx16C61XlqOtX1ZDM3siSm5i05eT2jKp8cpEQTWO4rfFlLMrUQ6oKExuXom8XWU0M04TUXlqlYKtV_5US1_YRMtzopQKV1e6kIjgAvyTJfCX_vb7W8fBArSrhBP61dqCwhbxhdxC0Nu6k_nlcimNyweerE");'></div>
+<p class="text-slate-800 dark:text-slate-200 text-sm font-medium">Mike, 23</p>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl w-full" data-alt="Profile picture of Emily" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBimkhqLhx8e0luLgwVhjDXHQZDVOQRDPXwxSOFfqyKuI1PkHqG2UVhkQGwEqa9CEgdagDHN7-t2pChuRwy-Zyh5AU-D_EtZgazOqivL-fPVngBR0BceMT0ZR4aZa0Ysrw0z2ZJwfeoy4v330uSKN_A-H5AiluokNXh1EHDAKzXXqSfocJtvoDlBuTxyTe3PSZo3jAcFWf2fVYXI1SX1abTGIto7UYMMB53VDQc4oOidtOafmLLD9RQyYEof20WBXgzUSOL73uxYwA");'></div>
+<p class="text-slate-800 dark:text-slate-200 text-sm font-medium">Emily, 20</p>
+</div>
+<div class="flex flex-col items-center gap-2 opacity-50">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl w-full" data-alt="Blurred profile picture of a potential match" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBGZf4Ggu8i_T8VNhvSJyA7w2MTWRiuUgaugIsvCEwdvU4IysINY_RHQnUieTCrPA70C3ffkIQr4hsFkOrHDs4m6YliYuX_Gql2LDUgKYjgjbHubBcqNftmHqqZ4jeaAQLqFNRRGMu3fB1XXfM3AkoneeY1zdLGy_7ru27Qke6MY3NC6-cJDxxW6hM4MbU1CaoQobhwFgNBbMlK1o5PQ-dvHA6RmbI4be_kYTiJCGMvwY4KABsdzSV_BnBqHQIwdnRg6_B0FniLT7c"); filter: blur(8px);'>
+<div class="w-full h-full flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-4xl">lock</span>
+</div>
+</div>
+<p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Unlock More</p>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-700 p-2 z-10">
+<div class="flex justify-around items-center">
+<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-xs font-medium">Discover</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">favorite</span>
+<span class="text-xs font-medium">Matches</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary dark:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;">person</span>
+<span class="text-xs font-bold">Profile</span>
+</a>
+</div>
+</div>
+</div>
+
+</body></html>

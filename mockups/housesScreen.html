@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Housing App</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#13a4ec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101c22",
+          },
+          fontFamily: {
+            "display": ["Plus Jakarta Sans", "Noto Sans", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+<style>
+    body {
+      min-height: 100dvh;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-screen w-full flex-col items-center group/design-root overflow-hidden pb-20">
+<div class="flex-1 flex flex-col items-center justify-center w-full p-4">
+<div class="relative w-full max-w-sm h-full flex items-center justify-center">
+<div class="absolute w-[95%] h-[98%] transform opacity-75 rounded-xl bg-white dark:bg-zinc-800 shadow-lg -z-10 top-2"></div>
+<div class="absolute w-full h-full bg-white dark:bg-zinc-800 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+<div class="relative h-3/5 w-full">
+<div class="absolute inset-0 bg-center bg-no-repeat bg-cover" data-alt="Bright, airy bedroom with a large window and a modern desk setup." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfo9pQajbBGcGmGsaJwPoSi2sptcXlZkIz7aab8GNKUuIH2CHs-P13zMy7xaKpzkFgmlFczcdBDkNLDwaIlBDxXwi3XrpYDizi6dW_VwnFfN87lKPOsGxS9zxxwXVEFHwu6nk-dZePHeLCL3EtuRR4gEvhmemS-SC8YzYQzFTjRWo_Upci84KSbS-R1c-221c4JRH01YIO2UFDrfpVSdELL81KgZ9U_2j-GfVROyqRlOgn4pUEg9f5u5viThfkr6pqRVmQ9OZnZ7g');"></div>
+<div class="absolute inset-x-0 top-0 pt-2 px-2 flex justify-center space-x-2">
+<div class="flex-1 h-1 bg-white/80 rounded-full"></div>
+<div class="flex-1 h-1 bg-white/40 rounded-full"></div>
+<div class="flex-1 h-1 bg-white/40 rounded-full"></div>
+</div>
+<div class="absolute inset-x-0 bottom-0 h-auto p-4 pt-12 bg-gradient-to-t from-black/80 to-transparent">
+<h1 class="text-white text-3xl font-bold tracking-tight">Modern Downtown Loft</h1>
+<p class="text-slate-200 text-base font-normal flex items-center mt-1">
+<span class="material-symbols-outlined text-lg mr-1.5">location_on</span>
+                Downtown, 10-min walk to campus
+              </p>
+</div>
+</div>
+<div class="flex-1 flex flex-col justify-between p-4 pt-2 relative">
+<div class="absolute -top-6 right-4 bg-primary text-white text-lg font-semibold py-1.5 px-4 rounded-full shadow-lg">$850/mo</div>
+<div>
+<p class="text-slate-800 dark:text-slate-200 text-base font-normal mt-3">
+                Sunny room with a private bath and walk-in closet. Comes fully furnished with access to a shared kitchen and living area.
+              </p>
+</div>
+<div class="mt-4">
+<h2 class="text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Current Roommates</h2>
+<div class="flex items-center">
+<div class="flex -space-x-3">
+<img alt="Profile picture of John Doe" class="inline-block size-11 rounded-full ring-2 ring-white dark:ring-zinc-800" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTTJSdE8W6Ivt_RkxP3q32i3BxwDcM46Gl_06f_sXCYwgKllemNAMWy36pZTzI43Ru1MwZ7uQJvDvOclD-s6jCceNKqmKh-XWwa4v-Qy295_M5JzPwOkVR3boWYdlNIY38HzYD2KtNaCw8XgbjmJcGZ2ppk8RMbH6V5EmBMRDq_dQbuqbnPCUllBjf6m156Q0ojdBbesQbYcb3XAw0dLgHfqtlsY67Yras3GRQQ2miFpqRb1D_V0vN9C3LwrlIxgHJZIDBq2SeU5s"/>
+<img alt="Profile picture of Jane Smith" class="inline-block size-11 rounded-full ring-2 ring-white dark:ring-zinc-800" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjZDV2xhvFJjPd4o8wCbFPgLjYrU-_gNbGJ-i_qA3ijB5Ro8_EODyW7AQppyiwG47-M7XEUHMiD-X324Aq6_-rbSAAST25E64NlUBnbhWrbFT-_ZeNtqFv6aqrGrsUhUzlGTLrH525HTxKlRgPx3oK7cI9xJAQCX6Cyg9QeFjg7ePW3UPwLClUxmLpHykf3nX2fnru2Hf6iU4oKP-x_S3OvRmZnOAjEH0l6lrYVZBSXjIBSs79D1U_80Fkg0DCHzOyorxWBq2U11o"/>
+<img alt="Profile picture of Emily Jones" class="inline-block size-11 rounded-full ring-2 ring-white dark:ring-zinc-800" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDklKSXmgTnUDuokGm9THPR9OIYO8yCbRXbP40FZREf5HzZfjyJubu0oGa99-LNNJZ5kQaL7Z7S5tZGyMnL7xibgaencu60W8fDeeNj0Hu7fsD8KXJSo01lC8pYb53fDRj7PuGFLsGTyAW5FZzRKcFkelkwnnO2v5CG485102Jx-sUo6Pvv1BMQcEORiUEpZfu_UhWuxfv8Ull8P9DiuOw0wvn0kpR7gQKjh2AepkLXm52H_T3wUgvJ3RiPQJPtpQKFNKz5t4LfeVo"/>
+</div>
+<span class="ml-4 text-slate-500 dark:text-slate-400 text-sm">+2 more</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full px-4 pb-4 pt-2">
+<div class="relative flex items-center justify-center space-x-6">
+<button class="bg-white dark:bg-zinc-700 p-4 rounded-full shadow-md hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
+<span class="material-symbols-outlined text-4xl text-red-500">close</span>
+</button>
+<button class="bg-white dark:bg-zinc-700 p-3 rounded-full shadow-md hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+<span class="material-symbols-outlined text-2xl text-blue-500">star</span>
+</button>
+<button class="bg-white dark:bg-zinc-700 p-4 rounded-full shadow-md hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors">
+<span class="material-symbols-outlined text-4xl text-green-500">favorite</span>
+</button>
+<button class="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-zinc-700 p-3 rounded-full shadow-md hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors">
+<span class="material-symbols-outlined text-xl text-gray-500 dark:text-gray-400">undo</span>
+</button>
+</div>
+</div>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-800 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.3)] flex justify-around items-center h-20 px-4 z-50">
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-3xl">home</span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="text-xs font-bold">Discover</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-3xl">favorite</span>
+<span class="text-xs font-medium">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-3xl">person</span>
+<span class="text-xs font-medium">Profile</span>
+</a>
+</nav>
+
+</body></html>

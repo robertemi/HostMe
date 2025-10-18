@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chat with Jane</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#13a4ec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101c22",
+          },
+          fontFamily: {
+            "display": ["Plus Jakarta Sans", "Noto Sans", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark">
+<div class="relative flex h-screen w-full flex-col font-display group/design-root overflow-hidden">
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-slate-200">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Jane Doe's profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAu56ghrXG-fJN_MsxVebrmbfk04n7o77vU47bHQxRqg1KqiDfLc7sBtZwqfa7tmY675c9mog06OdANwdq_mUd818AHrJgqDKigY2S4EmCR7hRl1lupxXcJwZGavcZH28y2VrG2Sroibvg7M7S6CFNIsG7t9bDuVtj4Ttw0ShYh1zkjBU7dMzYn8xAk5yQ2FJDZKUWwIk5gB2zWdWhbAaEJ0ENepcuZHhbkbfEJEN8l9RwnuqX-Rx9L33SlagKwckZPxBozmB0KOaI");'></div>
+<h2 class="text-slate-900 dark:text-slate-50 text-lg font-bold leading-tight tracking-[-0.015em]">Jane Doe</h2>
+</div>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 bg-transparent text-slate-900 dark:text-slate-200 gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4">
+<div class="flex gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shrink-0" data-alt="John Doe's profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDlCvzcLse57i39VeM8LQAV6jMEwc167TZaXUBrkC66XNfVXegAmYX_2f1Xdj2mo-hhE2vWyH9KJKLFyd2f6K_1hxKUJu0rJv4FOfshogt_fj6qQCyadrmpE8zgiV-3ebWUeZBiTitEMVyEnOh9uBNENxAvdQbZSqdCDfwAbsvmzG_piUE0JJ02ubv8jJ8jcR1E1sfIpIhHOO4dYsbFZqy9KRxKIl1lSB91G73I7JzQ2ON0hjrGvBPozMdddwzYshi99yjUCnAAdWc");'></div>
+<div class="flex flex-1 flex-col items-start gap-2">
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-3">
+<p class="text-slate-900 dark:text-slate-50 text-base font-bold leading-tight">John Doe</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">10:30 AM</p>
+</div>
+<div class="rounded-xl bg-slate-200 dark:bg-slate-800 px-4 py-3">
+<p class="text-slate-900 dark:text-slate-50 text-base font-normal leading-normal">
+                    Hey! I saw your profile and I'm also looking for a place to stay. I'm a student at the University of California, Berkeley. What about you?
+                </p>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-end gap-3 justify-end">
+<div class="flex flex-1 flex-col gap-1 items-end">
+<div class="flex flex-wrap items-center gap-3">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">10:31 AM</p>
+</div>
+<p class="text-base font-normal leading-normal flex max-w-[360px] rounded-xl px-4 py-3 bg-primary text-white">
+              Hi John! I'm a student at the University of California, Berkeley as well. I'm looking for a place to stay with a roommate. What's your budget?
+          </p>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shrink-0" data-alt="Jane Doe's profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCKpMJ-ISwYkMPTiOKcXqqROWztmyVnesfxx_ktx2qaldNVczIYzw0_p-IWdSQ-6d_anEaLauTkT_5TSlbUZwYrLsi21mdaMaHDTi3q11CS503pQkwT97x_ECEcWlwSpMsc798arPFQBCsAUUJlGssdgIMqkD-Z83VNqHV0wZ_kqUoeb289jRoOfpl9TcgDCr2wKcSEE8gp6f8VYnCYGAMj_9Y44OtEKqZaMwUXp4NxQkfsmy13GFB4-fh5aMRJevGJA-z1l_1RJHg");'></div>
+</div>
+<div class="flex gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shrink-0" data-alt="John Doe's profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDZQAd1MdDYQuhAhK9DSaPc7idnmpJtPH3OmUaYUocU6vTouyUByI8sMpiQIthmwAIsuHRTymteVIwFBllJUZcxQeTrJ2P4E5afUf7Xi8WnLLl2Xac1LO0TiRtf9FD12D4uf1tnZ0jyzFCZH9KTTHkWs_qSra08j6NPrCvK5jquQz_JG9-7hNjJrlOvtoT6bQLgJ1i7WtWuu5puh1ztm_rmWlHsun5Oc0SPTfdYvJkIhqPyIsxvNupM0HRix1UI6rEXxeLUJ3GijQM");'></div>
+<div class="flex flex-1 flex-col items-start gap-2">
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-3">
+<p class="text-slate-900 dark:text-slate-50 text-base font-bold leading-tight">John Doe</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">10:32 AM</p>
+</div>
+<div class="rounded-xl bg-slate-200 dark:bg-slate-800 px-4 py-3">
+<p class="text-slate-900 dark:text-slate-50 text-base font-normal leading-normal">My budget is around $1000 per month. What about you?</p>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-end gap-3 justify-end">
+<div class="flex flex-1 flex-col gap-1 items-end">
+<div class="flex flex-wrap items-center gap-3">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">10:33 AM</p>
+</div>
+<p class="text-base font-normal leading-normal flex max-w-[360px] rounded-xl px-4 py-3 bg-primary text-white">
+              That's great! I'm looking for something similar. I've found a few places that we can look at. I'll send them over to you.
+          </p>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shrink-0" data-alt="Jane Doe's profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCEdCpSWYtJK7iPnLZ00r0x_l6v5etbtzMR4Ns0j8ZRuRbbjnUIKaPqO9ff2eIxOD_cE9dcHf0c_MUjdE-Q_bZo23IDAfFk2l_PBKvxGXZzkzY1agsv4hVW9QDcq_prd24CiWOIeYjH4E6cCtSVvRdDM9JuMdxyt0KZO9NsVW0bP6JOh8FsmCC4Lqxtu8hkP4k72dleV8A6BoAeYKMPYpCJjziqWV8Z7ShOr7QcTqP8ZnNu3GDrqBlHwlb4yA5DmwBJ5xVchuneEZA");'></div>
+</div>
+</div>
+<div class="flex items-center gap-2 bg-background-light dark:bg-background-dark p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex-1">
+<input class="w-full rounded-full border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-slate-50 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-primary focus:ring-primary" placeholder="Type a message..." type="text"/>
+</div>
+<button class="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-white">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+<div class="flex items-center justify-around border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark p-2">
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-xs font-medium">Discover</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg text-primary dark:text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-xs font-medium">Matches</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-xs font-medium">Profile</span>
+</a>
+</div>
+</div>
+</body></html>

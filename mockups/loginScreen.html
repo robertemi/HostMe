@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Housing App Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4A90E2",
+                        "background-light": "#F2F2F7",
+                        "background-dark": "#101c22",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex min-h-screen flex-col items-center justify-center p-4">
+<div class="w-full max-w-md space-y-6">
+<div class="flex flex-col items-center justify-center space-y-2 text-center">
+<div class="flex items-center gap-2">
+<svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<h1 class="text-2xl font-bold text-[#333333] dark:text-white">HostMe</h1>
+</div>
+<h1 class="text-3xl font-bold tracking-tight text-[#333333] dark:text-white">Welcome Back!</h1>
+<p class="text-gray-500 dark:text-gray-400">Log in to find your perfect roommate and place.</p>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col">
+<label class="text-[#333333] dark:text-white text-base font-medium leading-normal pb-2" for="email">Email or Username</label>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#333333] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 h-14 placeholder:text-gray-400 p-4 text-base font-normal leading-normal" id="email" placeholder="Enter your email or username" type="email"/>
+</div>
+<div class="flex flex-col">
+<label class="text-[#333333] dark:text-white text-base font-medium leading-normal pb-2" for="password">Password</label>
+<div class="relative">
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#333333] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 h-14 placeholder:text-gray-400 p-4 text-base font-normal leading-normal pr-12" id="password" placeholder="Enter your password" type="password"/>
+<button class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">
+<span class="material-symbols-outlined">visibility_off</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-end">
+<a class="text-sm font-medium text-primary hover:underline" href="#">Forgot Password?</a>
+</div>
+<button class="w-full h-14 flex items-center justify-center rounded-lg bg-primary text-white text-base font-bold shadow-sm hover:bg-primary/90 transition-colors">
+                    Log In
+                </button>
+</div>
+<div class="relative">
+<div class="absolute inset-0 flex items-center">
+<span class="w-full border-t border-gray-300 dark:border-gray-700"></span>
+</div>
+<div class="relative flex justify-center text-sm">
+<span class="bg-background-light dark:bg-background-dark px-2 text-gray-500 dark:text-gray-400">Or log in with</span>
+</div>
+</div>
+<div class="space-y-4">
+<button class="w-full h-14 flex items-center justify-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-[#333333] dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+    <!-- Google SVG -->
+    <svg class="h-6 w-6" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#4285f4" d="M533.5 278.4c0-18.3-1.6-36-4.6-53.1H272v100.7h147.5c-6.4 34.6-25.7 63.9-54.9 83.5v69.4h88.6c51.9-48 81.3-118.1 81.3-200.5z"/>
+        <path fill="#34a853" d="M272 544.3c73.7 0 135.6-24.4 180.7-66.4l-88.6-69.4c-24.6 16.5-56.1 26.3-92.1 26.3-70.7 0-130.6-47.7-152-111.6H29.9v70.5C74.7 487 168.3 544.3 272 544.3z"/>
+        <path fill="#fbbc04" d="M120 324.8c-10.7-31.9-10.7-66.3 0-98.2V156.1H29.9C-1.6 209.2-1.6 335.1 29.9 388.2L120 324.8z"/>
+        <path fill="#ea4335" d="M272 107.7c39.9 0 75.8 13.7 104 40.8l78-78C404.9 24.1 346 0 272 0 168.3 0 74.7 57.3 29.9 142.6l90.1 70.5C141.4 155.4 201.3 107.7 272 107.7z"/>
+    </svg>
+    Continue with Google
+</button>
+<button class="w-full h-14 flex items-center justify-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-[#333333] dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        <!-- Apple SVG (Simple Icons style) -->
+        <svg class="h-7 w-7" viewBox="0 0 170.5 185.1" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- top leaf -->
+      <!-- The apple leaf is made up of four curveto lines as follows: -->
+      <path fill="#000" d="m108,35
+            c5.587379,-6.7633 9.348007,-16.178439 8.322067,-25.546439
+            c-8.053787,0.32369 -17.792625,5.36682 -23.569427,12.126399
+            c-5.177124,5.985922 -9.711121,15.566772 -8.48777,24.749359
+            c8.976891,0.69453 18.147476,-4.561718 23.73513,-11.329308" />
+      
+      <!-- apple left half -->
+      <path fill="#000" d="M88,162.415214
+            c-12.24469,0 -16.072174,6.151901 -26.213551,6.550446
+            c-10.52422,0.398254 -18.538303,-10.539917 -25.26247,-20.251053
+            c-13.740021,-19.864456 -24.24024,-56.132286 -10.1411,-80.613663
+            c7.004152,-12.157551 19.521101,-19.85622 33.10713,-20.053638
+            c10.334515,-0.197132 20.089069,6.952717 26.406689,6.952717" />
+      
+      <!-- apple right half -->
+      <path fill="#000" d="M85,55
+            c6.313614,0 18.167473,-8.59832 30.628998,-7.335548
+            c5.21682,0.217129 19.860519,2.1073 29.263641,15.871029
+            c-0.75766,0.469692 -17.472931,10.200527 -17.291229,30.443592
+            c0.224838,24.213104 21.241287,32.270615 21.474121,32.373459
+            c-0.177704,0.56826 -3.358078,11.482742 -11.072464,22.756622
+            c-6.668747,9.746841 -13.590027,19.457977 -24.493088,19.659103
+            c-10.713348,0.197403 -14.158287,-6.353043 -26.406677,-6.353043" />
+    </svg>
+    Continue with Apple
+</button>
+</div>
+<div class="text-center">
+<p class="text-sm text-gray-500 dark:text-gray-400">
+                    Don't have an account? <a class="font-medium text-primary hover:underline" href="#">Sign Up</a>
+</p>
+</div>
+</div>
+</div>
+</body></html>
