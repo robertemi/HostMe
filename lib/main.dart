@@ -18,3 +18,5 @@ class MainApp extends StatelessWidget {
     );
   }
 }
+// End of file lib/main.dart
+// --- IGNORE ---
