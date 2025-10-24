@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/message_model.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input_field.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -12,6 +14,38 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  final _channel = WebSocketChannel.connect(
+    Uri.parse('ws://localhost:8000/ws'),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+
+    _channel.stream.listen((message) {
+      // The echo server sends back what you sent
+      setState(() {
+        _messages.add(
+          Message(
+            sender: "John Doe",
+            text: message.toString(),
+            time: "Now",
+            isMe: false,
+            avatarUrl: "https://i.pravatar.cc/150?img=3",
+          ),
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _channel.sink.close();
+    _controller.dispose();
+    super.dispose();
+  }
+
+
 
   final List<Message> _messages = [
     Message(
@@ -45,18 +79,23 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage() {
     if (_controller.text.trim().isEmpty) return;
 
+    final text = _controller.text.trim();
+
     setState(() {
       _messages.add(
         Message(
           sender: "Jane Doe",
-          text: _controller.text.trim(),
+          text: text,
           time: "Now",
           isMe: true,
           avatarUrl: "https://i.pravatar.cc/150?img=5",
         ),
       );
-      _controller.clear();
     });
+
+    _channel.sink.add(text);
+    _controller.clear();
+
   }
 
   @override
