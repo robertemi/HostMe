@@ -50,3 +50,4 @@ web/
 windows/
 .metadata
 .github/
+.vscode/
