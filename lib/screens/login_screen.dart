@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme.dart';
+import '../services/auth_service.dart';
 import 'register_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,12 +16,65 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
+      _showError('Please enter both email and password');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _authService.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (response.user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: Color(0xFF388E3C),
+          ),
+        );
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } else {
+        _showError('Login failed. Please check your credentials.');
+      }
+    } on AuthException catch (error) {
+      _showError(error.message);
+    } catch (error) {
+      _showError('An unexpected error occurred. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -99,15 +155,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: () {
-                      // TODO: implement login logic
-                    },
+                    onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.colorDarkerBrown,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text('Log In', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text('Log In', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
 
                   const SizedBox(height: 20),

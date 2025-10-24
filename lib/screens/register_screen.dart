@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,10 +12,15 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final AuthService _authService = AuthService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
+
+  bool _isLoading = false;
+  bool? _obscurePassword = true;
+  bool? _obscureConfirm = true;
 
   // Password validation state
   bool _hasMinLength = false;
@@ -59,6 +66,86 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  Future<void> _handleRegister() async {
+    // Validate inputs
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmController.text;
+
+    if (name.isEmpty) {
+      _showError('Please enter your full name');
+      return;
+    }
+
+    if (email.isEmpty) {
+      _showError('Please enter your email');
+      return;
+    }
+
+    if (!email.contains('@')) {
+      _showError('Please enter a valid email address');
+      return;
+    }
+
+    if (password.isEmpty) {
+      _showError('Please enter a password');
+      return;
+    }
+
+    // Check password requirements
+    if (!_hasMinLength || !_hasUppercase || !_hasLowercase || !_hasNumber || !_hasSpecialChar) {
+      _showError('Password does not meet all requirements');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showError('Passwords do not match');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _authService.signUp(
+        email: email,
+        password: password,
+        fullName: name,
+      );
+
+      if (!mounted) return;
+
+      if (response.user != null) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account created! Please check your email to verify.'), backgroundColor: Color(0xFF388E3C)),
+        );
+
+        // Navigate back to login screen
+        Navigator.of(context).pop();
+      } else {
+        _showError('Registration failed. Please try again.');
+      }
+    } on AuthException catch (error) {
+      _showError(error.message);
+    } catch (e) {
+      _showError('An unexpected error occurred');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFD32F2F),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -92,7 +179,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   Text('Password', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.colorDarkerBrown)),
                   const SizedBox(height: 8),
-                  TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(hintText: 'Create a password')),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword ?? true,
+                    decoration: InputDecoration(
+                      hintText: 'Create a password',
+                      suffixIcon: IconButton(
+                        icon: Icon((_obscurePassword ?? true) ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () {
+                          setState(() {
+                            final current = _obscurePassword ?? true;
+                            _obscurePassword = !current;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   
                   // Password strength indicator
@@ -146,15 +248,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   Text('Confirm password', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.colorDarkerBrown)),
                   const SizedBox(height: 8),
-                  TextField(controller: _confirmController, obscureText: true, decoration: const InputDecoration(hintText: 'Confirm your password')),
+                  TextField(
+                    controller: _confirmController,
+                    obscureText: _obscureConfirm ?? true,
+                    decoration: InputDecoration(
+                      hintText: 'Confirm your password',
+                      suffixIcon: IconButton(
+                        icon: Icon((_obscureConfirm ?? true) ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () {
+                          setState(() {
+                            final current = _obscureConfirm ?? true;
+                            _obscureConfirm = !current;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
 
                   ElevatedButton(
-                    onPressed: () {
-                      // TODO: registration logic
-                    },
+                    onPressed: _isLoading ? null : _handleRegister,
                     style: ElevatedButton.styleFrom(backgroundColor: AppTheme.colorDarkerBrown, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    child: Text('Create account', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text('Create account', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
 
                   const SizedBox(height: 12),
