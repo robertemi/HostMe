@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'screens/map_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/supabase_config.dart';
+import 'screens/login_screen.dart';
+import 'theme.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
+  );
+  
+  runApp(const MainApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -11,10 +21,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'OpenStreetMap App',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MapScreen(),
+      title: 'HostMe',
+      theme: AppTheme.lightTheme,
+      home: const LoginScreen(),
     );
   }
 }
