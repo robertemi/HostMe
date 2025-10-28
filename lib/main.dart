@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:host_me/screens/home_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
-import 'screens/login_screen.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -12,7 +12,7 @@ Future<void> main() async {
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
   
-  runApp(const MainApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -23,9 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'HostMe',
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: const HomeScreen(),
     );
   }
 }
-// End of file lib/main.dart
-// --- IGNORE ---
