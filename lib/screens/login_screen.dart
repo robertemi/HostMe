@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_links/app_links.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:async';
 import '../theme.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
@@ -13,17 +16,101 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  StreamSubscription<Uri>? _sub;
+  Timer? _pollTimer;
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _sub?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Listen for auth changes and navigate to Home when user signs in.
+    _authService.authStateChanges.listen((event) {
+      final user = _authService.currentUser;
+      if (user != null && mounted) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      }
+    });
+
+    // Check initial link (cold start) and subscribe to further incoming links
+    AppLinks().getInitialLink().then((uri) async {
+      if (uri != null) await _handleIncomingUri(uri);
+    }).catchError((_) {});
+
+    _sub = AppLinks().uriLinkStream.listen((Uri uri) async {
+      await _handleIncomingUri(uri);
+    }, onError: (err) {
+      // ignore errors from uri link stream; they don't block the flow
+    });
+  }
+
+  Future<void> _handleIncomingUri(Uri uri) async {
+    try {
+      // Use dynamic to avoid compile-time dependency on exact SDK helper names.
+      final auth = Supabase.instance.client.auth as dynamic;
+      // Try common method signatures (string or Uri). Many SDK versions
+      // expose getSessionFromUrl or similar helper; attempt both.
+      try {
+        await auth.getSessionFromUrl(uri.toString());
+      } catch (_) {
+        try {
+          await auth.getSessionFromUrl(uri);
+        } catch (_) {
+          // If the SDK doesn't provide that helper, ignore and just
+          // fall back to checking currentUser below.
+        }
+      }
+    } catch (_) {
+      // Ignore reflection/failure — we'll still check currentUser below.
+    }
+
+    final user = _authService.currentUser;
+    if (user != null && mounted) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // When the app resumes (user returns from browser), check if the auth session was created.
+    if (state == AppLifecycleState.resumed) {
+      // Start a short-lived poll to detect the session if it's created during resume.
+      _pollForSessionOnResume();
+    }
+  }
+
+  void _pollForSessionOnResume() {
+    _pollTimer?.cancel();
+    const duration = Duration(milliseconds: 500);
+    int attempts = 0;
+    const maxAttempts = 10; // ~5 seconds
+    _pollTimer = Timer.periodic(duration, (t) {
+      attempts++;
+      final user = _authService.currentUser;
+      if (user != null) {
+        t.cancel();
+        if (mounted) {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+        }
+      } else if (attempts >= maxAttempts) {
+        t.cancel();
+      }
+    });
   }
 
   Future<void> _handleLogin() async {
@@ -178,9 +265,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(children: [const Expanded(child: Divider()), const SizedBox(width: 8), Text('Or log in with', style: GoogleFonts.plusJakartaSans(color: AppTheme.colorLightest)), const SizedBox(width: 8), const Expanded(child: Divider())]),
                   const SizedBox(height: 16),
 
-                  // Social buttons
+                  // Social buttons - Native Google Sign-In
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: _isLoading ? null : () async {
+                      setState(() => _isLoading = true);
+                      try {
+                        final response = await _authService.signInWithGoogleNative();
+                        if (!mounted) return;
+                        
+                        if (response.user != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Google sign-in successful!'),
+                              backgroundColor: Color(0xFF388E3C),
+                            ),
+                          );
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                          );
+                        } else {
+                          _showError('Google sign-in failed. Please try again.');
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          _showError('Google sign-in error: ${e.toString()}');
+                        }
+                      } finally {
+                        if (mounted) setState(() => _isLoading = false);
+                      }
+                    },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -188,8 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       side: BorderSide(color: Colors.grey.shade300),
                     ),
                     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      // Placeholder for Google icon
-                      const Icon(Icons.account_circle, size: 20),
+                      SvgPicture.asset('assets/images/google_logo.svg', width: 20, height: 20),
                       const SizedBox(width: 8),
                       Text('Continue with Google', style: GoogleFonts.plusJakartaSans(fontSize: 14, color: AppTheme.colorDarkest)),
                     ]),

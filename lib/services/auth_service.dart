@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../config/supabase_config.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -31,6 +33,56 @@ class AuthService {
       email: email,
       password: password,
     );
+  }
+
+  // Note: OAuth flows are started by opening the hosted authorize URL (see buildOAuthAuthorizeUrl)
+  // The UI currently launches that URL with url_launcher. Keeping SDK-specific flows out of the service
+  // avoids version API mismatches across supabase_flutter releases.
+
+  /// Build the hosted authorize URL for a provider. If `redirectTo` is null the
+  /// Supabase default callback will be used (for web flows).
+  Uri buildOAuthAuthorizeUrl(String provider, {String? redirectTo}) {
+    final base = SupabaseConfig.supabaseUrl.replaceAll(RegExp(r'/$'), '');
+    final encoded = redirectTo != null ? Uri.encodeComponent(redirectTo) : '';
+    final uriString = redirectTo != null
+        ? '$base/auth/v1/authorize?provider=$provider&redirect_to=$encoded'
+        : '$base/auth/v1/authorize?provider=$provider';
+    return Uri.parse(uriString);
+  }
+
+  Future<AuthResponse> signInWithGoogleNative() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: '459371788165-3kn1hmf27glg6go2kjalj73md274754d.apps.googleusercontent.com',
+      );
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('Google sign-in was cancelled by user');
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
+      final String? accessToken = googleAuth.accessToken;
+
+      if (idToken == null) {
+        throw Exception('Failed to get ID token from Google');
+      }
+
+      try {
+        final auth = _supabase.auth as dynamic;
+        final response = await auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
+        return response as AuthResponse;
+      } catch (e) {
+        // Fallback: if the SDK method doesn't exist or fails, throw a descriptive error
+        throw Exception('Failed to exchange Google token with Supabase: $e');
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   // Sign out

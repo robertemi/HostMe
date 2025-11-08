@@ -6,6 +6,7 @@ import '../widgets/segmented_two_choice.dart';
 import '../widgets/info_card.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/app_bottom_nav_bar.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,7 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               await authService.signOut();
               if (context.mounted) {
-                Navigator.of(context).pushReplacementNamed('/login');
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
               }
             },
           ),
