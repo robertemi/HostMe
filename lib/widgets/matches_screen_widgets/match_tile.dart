@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/match_model.dart';
-import '../screens/chat_screen.dart';
+import '../../models/match_model.dart';
+import '../../screens/chat_screen.dart';
 
 class MatchTile extends StatelessWidget {
   final MatchModel match;

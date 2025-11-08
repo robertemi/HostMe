@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/match_model.dart';
-import '../widgets/match_tile.dart';
+import '../widgets/matches_screen_widgets/match_tile.dart';
 
 class MatchesScreen extends StatelessWidget {
   const MatchesScreen({super.key});
