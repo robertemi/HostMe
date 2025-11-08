@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
-import '../widgets/hero_section.dart';
-import '../widgets/segmented_two_choice.dart';
-import '../widgets/info_card.dart';
-import '../widgets/primary_button.dart';
+import '../widgets/home_screen_widgets/hero_section.dart';
+import '../widgets/home_screen_widgets/segmented_two_choice.dart';
+import '../widgets/home_screen_widgets/info_card.dart';
+import '../widgets/home_screen_widgets/primary_button.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 
 class HomeScreen extends StatefulWidget {
