@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import '../models/match_model.dart';
 import '../widgets/matches_screen_widgets/match_tile.dart';
+import '../widgets/app_bottom_nav_bar.dart';
+import 'home_screen.dart';
+import 'houses_screen.dart';
+import 'profile_screen.dart';
 
-class MatchesScreen extends StatelessWidget {
+class MatchesScreen extends StatefulWidget {
   const MatchesScreen({super.key});
+
+  @override
+  State<MatchesScreen> createState() => _MatchesScreenState();
+}
+
+class _MatchesScreenState extends State<MatchesScreen> {
+  int navIndex = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +68,30 @@ class MatchesScreen extends StatelessWidget {
                 return MatchTile(match: matches[index]);
               },
             ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: AppBottomNavBar(
+        currentIndex: navIndex,
+        onTap: (i) {
+          if (i == navIndex) return;
+          Widget target;
+          switch (i) {
+            case 0:
+              target = const HomeScreen();
+              break;
+            case 1:
+              target = const HousesScreen();
+              break;
+            case 2:
+              target = const MatchesScreen();
+              break;
+            case 3:
+            default:
+              target = const ProfileScreen();
+          }
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => target),
+          );
+        },
+      ),
     );
   }
 
@@ -94,16 +128,5 @@ class MatchesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      currentIndex: 2,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Discover'),
-        BottomNavigationBarItem(icon: Icon(Icons.favorite_outline), label: 'Matches'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-      ],
-    );
-  }
+  // Removed legacy bottom nav implementation; now handled by AppBottomNavBar.
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:host_me/screens/houses_screen.dart';
-import 'package:host_me/screens/roommate_finder_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:host_me/screens/home_screen.dart';
 import 'config/supabase_config.dart';
 import 'theme.dart';
 
@@ -24,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'HostMe',
       theme: AppTheme.lightTheme,
-      home: const RoommateFinderScreen(),
+      home: const HomeScreen(),
     );
   }
 }
