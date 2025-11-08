@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/location_model.dart';
-import '../widgets/map_widget.dart';
+import '../widgets/map_screen_widgets/map_widget.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});

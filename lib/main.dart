@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:host_me/screens/home_screen.dart';
 import 'config/supabase_config.dart';
 import 'theme.dart';
 import 'package:host_me/screens/login_screen.dart';

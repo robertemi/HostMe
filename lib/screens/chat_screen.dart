@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/message_model.dart';
-import '../widgets/chat_bubble.dart';
-import '../widgets/chat_input_field.dart';
+import '../widgets/chat_screen_widgets/chat_bubble.dart';
+import '../widgets/chat_screen_widgets/chat_input_field.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 

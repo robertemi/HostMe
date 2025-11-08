@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
-import '../widgets/hero_section.dart';
-import '../widgets/segmented_two_choice.dart';
-import '../widgets/info_card.dart';
-import '../widgets/primary_button.dart';
+import '../widgets/home_screen_widgets/hero_section.dart';
+import '../widgets/home_screen_widgets/segmented_two_choice.dart';
+import '../widgets/home_screen_widgets/info_card.dart';
+import '../widgets/home_screen_widgets/primary_button.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 import 'login_screen.dart';
+import 'houses_screen.dart';
+import 'matches_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -53,8 +56,25 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: navIndex,
         onTap: (i) {
-          setState(() => navIndex = i);
-          // TODO: Wire up navigation to other screens when available
+          if (i == navIndex) return;
+          Widget target;
+            switch (i) {
+              case 0:
+                target = const HomeScreen();
+                break;
+              case 1:
+                target = const HousesScreen();
+                break;
+              case 2:
+                target = const MatchesScreen();
+                break;
+              case 3:
+              default:
+                target = const ProfileScreen();
+            }
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => target),
+          );
         },
       ),
       body: HeroSection(
