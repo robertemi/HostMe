@@ -4,8 +4,8 @@ import 'package:host_me/widgets/profile_screen_widgets/profile_header.dart';
 import 'package:host_me/widgets/profile_screen_widgets/profile_avatar_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/profile_progress_bar.dart';
 import 'package:host_me/widgets/profile_screen_widgets/interests_section.dart';
-import 'package:host_me/widgets/profile_screen_widgets/preferences_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/activity_section.dart';
+import 'package:host_me/widgets/profile_screen_widgets/preferences_section.dart';
 import 'home_screen.dart';
 import 'houses_screen.dart';
 import 'matches_screen.dart';
@@ -18,9 +18,10 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Local state for demo only; these would come from a profile model later
-  int lookingFor = 0;
-  double budget = 1000;
+  // Local state (later these will come from your Supabase profile)
+  double budget = 3;
+  double cleanliness = 4;
+  double noise = 2;
   bool smoking = false;
   bool pets = true;
 
@@ -57,10 +58,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- Avatar + Bio ---
             Center(
               child: ProfileAvatarSection(
-                imageUrl:
-                    'https://i.pravatar.cc/300?img=11',
+                imageUrl: 'https://i.pravatar.cc/300?img=11',
                 name: 'Alex Doe',
                 age: 22,
                 bio:
@@ -68,41 +69,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 20),
+
+            // --- Progress bar ---
             const ProfileProgressBar(percent: 0.75),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                InterestsSection(
-                  interests: const [
-                    'Music',
-                    'Sports',
-                    'Gaming',
-                    'Hiking',
-                    'Cooking',
-                    'Traveling',
-                  ],
-                  highlighted: const {'Music', 'Gaming', 'Hiking'},
-                ),
+
+            // --- Interests ---
+            InterestsSection(
+              interests: const [
+                'Music',
+                'Sports',
+                'Gaming',
+                'Hiking',
+                'Cooking',
+                'Traveling',
               ],
+              highlighted: const {'Music', 'Gaming', 'Hiking'},
             ),
             const SizedBox(height: 24),
+
+            // --- Preferences ---
             PreferencesSection(
-              lookingForIndex: lookingFor,
-              onLookingForChanged: (i) => setState(() => lookingFor = i),
-              budgetMin: 500,
-              budgetMax: 1500,
-              budgetValue: budget,
+              budgetLevel: budget,
               onBudgetChanged: (v) => setState(() => budget = v),
-              cleanlinessLabel: 'Very Tidy',
-              cleanlinessPercent: 0.83,
-              noiseLabel: 'Quiet',
-              noisePercent: 0.17,
+              cleanlinessLevel: cleanliness,
+              onCleanlinessChanged: (v) => setState(() => cleanliness = v),
+              noiseLevel: noise,
+              onNoiseChanged: (v) => setState(() => noise = v),
               smoking: smoking,
               onSmokingChanged: (v) => setState(() => smoking = v),
               pets: pets,
-              onPetsChanged: (v) => setState(() => pets = v),
+              onPetsChanged: (v) => setState(() => pets = v)
             ),
+
             const SizedBox(height: 28),
+
+            // --- Activity Section ---
             const ActivitySection(),
             const SizedBox(height: 56),
           ],
