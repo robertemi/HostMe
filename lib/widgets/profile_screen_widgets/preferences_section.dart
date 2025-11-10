@@ -1,247 +1,160 @@
 import 'package:flutter/material.dart';
 
 class PreferencesSection extends StatelessWidget {
-  const PreferencesSection({
-    super.key,
-    required this.lookingForIndex,
-    required this.onLookingForChanged,
-    required this.budgetMin,
-    required this.budgetMax,
-    required this.budgetValue,
-    required this.onBudgetChanged,
-    required this.cleanlinessLabel,
-    required this.cleanlinessPercent,
-    required this.noiseLabel,
-    required this.noisePercent,
-    required this.smoking,
-    required this.onSmokingChanged,
-    required this.pets,
-    required this.onPetsChanged,
-  });
-
-  final int lookingForIndex; // 0 roommate,1 place,2 both
-  final ValueChanged<int> onLookingForChanged;
-  final double budgetMin;
-  final double budgetMax;
-  final double budgetValue;
+  final double cleanlinessLevel;
+  final ValueChanged<double> onCleanlinessChanged;
+  final double noiseLevel;
+  final ValueChanged<double> onNoiseChanged;
+  final double budgetLevel;
   final ValueChanged<double> onBudgetChanged;
-  final String cleanlinessLabel;
-  final double cleanlinessPercent;
-  final String noiseLabel;
-  final double noisePercent;
   final bool smoking;
   final ValueChanged<bool> onSmokingChanged;
   final bool pets;
   final ValueChanged<bool> onPetsChanged;
 
+  const PreferencesSection({
+    super.key,
+    required this.cleanlinessLevel,
+    required this.onCleanlinessChanged,
+    required this.noiseLevel,
+    required this.onNoiseChanged,
+    required this.budgetLevel,
+    required this.onBudgetChanged,
+    required this.smoking,
+    required this.onSmokingChanged,
+    required this.pets,
+    required this.onPetsChanged
+  });
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Preferences',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 20),
-        _LabeledBlock(
-          label: 'Looking For',
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Preferences',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            padding: const EdgeInsets.all(4),
-            child: Row(
-              children: [
-                for (int i = 0; i < 3; i++)
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => onLookingForChanged(i),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: lookingForIndex == i
-                              ? Theme.of(context).primaryColor
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          const ['Roommate', 'Place', 'Both'][i],
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: lookingForIndex == i
-                                ? FontWeight.w800
-                                : FontWeight.w600,
-                            color: lookingForIndex == i
-                                ? Colors.white
-                                : Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+            const SizedBox(height: 16),
+
+            // Budget slider
+            const Text('Budget'),
+            _LabeledSlider(
+              min: 1,
+              max: 5,
+              value: budgetLevel,
+              onChanged: onBudgetChanged,
+              labels: const [
+                'Under \$500',
+                '\$500-\$800',
+                '\$800-\$1000',
+                '\$1000-\$1500',
+                'Over \$1500',
               ],
             ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        _LabeledBlock(
-          label: 'Budget Range',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('4${budgetMin.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  Text('4${budgetMax.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                ],
-              ),
-              Slider(
-                min: budgetMin,
-                max: budgetMax,
-                value: budgetValue.clamp(budgetMin, budgetMax),
-                label: '4${budgetValue.round()}',
-                onChanged: onBudgetChanged,
-                activeColor: Theme.of(context).primaryColor,
-                inactiveColor: Colors.white24,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        _AttributeBar(
-          label: 'Cleanliness',
-          valueLabel: cleanlinessLabel,
-          percent: cleanlinessPercent,
-          color: Theme.of(context).primaryColor,
-        ),
-        const SizedBox(height: 12),
-        _AttributeBar(
-          label: 'Noise Level',
-          valueLabel: noiseLabel,
-          percent: noisePercent,
-          color: Theme.of(context).primaryColor,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Smoking', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-            _Switch(smoking, onSmokingChanged),
+
+            const SizedBox(height: 24),
+
+            // Cleanliness slider
+            const Text('Cleanliness'),
+            _LabeledSlider(
+              min: 1,
+              max: 5,
+              value: cleanlinessLevel,
+              onChanged: onCleanlinessChanged,
+              labels: const [
+                'Very Messy',
+                'Messy',
+                'Average',
+                'Tidy',
+                'Very Tidy',
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Noise slider
+            const Text('Noise Level'),
+            _LabeledSlider(
+              min: 1,
+              max: 5,
+              value: noiseLevel,
+              onChanged: onNoiseChanged,
+              labels: const [
+                'Very Quiet',
+                'Quiet',
+                'Moderate',
+                'Lively',
+                'Very Loud',
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Toggles
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Text('Smoking'),
+                    Switch(value: smoking, onChanged: onSmokingChanged),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Pets'),
+                    Switch(value: pets, onChanged: onPetsChanged),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Pets', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-            _Switch(pets, onPetsChanged),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _LabeledBlock extends StatelessWidget {
-  const _LabeledBlock({required this.label, required this.child});
-  final String label;
-  final Widget child;
+class _LabeledSlider extends StatelessWidget {
+  final double min;
+  final double max;
+  final double value;
+  final ValueChanged<double> onChanged;
+  final List<String> labels;
+
+  const _LabeledSlider({
+    required this.min,
+    required this.max,
+    required this.value,
+    required this.onChanged,
+    required this.labels,
+  });
+
   @override
   Widget build(BuildContext context) {
+    final index = value.round().clamp(1, labels.length) - 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Slider(
+          min: min,
+          max: max,
+          divisions: (max - min).toInt(),
+          value: value.clamp(min, max),
+          onChanged: onChanged,
+          label: labels[index],
+        ),
         Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        child,
-      ],
-    );
-  }
-}
-
-class _AttributeBar extends StatelessWidget {
-  const _AttributeBar({
-    required this.label,
-    required this.valueLabel,
-    required this.percent,
-    required this.color,
-  });
-  final String label;
-  final String valueLabel;
-  final double percent;
-  final Color color;
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-            Text(valueLabel, style: TextStyle(color: color, fontWeight: FontWeight.w800)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: Container(
-            height: 8,
-            color: Colors.white.withOpacity(0.25),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: percent.clamp(0, 1),
-              child: Container(color: color),
-            ),
-          ),
+          labels[index],
+          style: const TextStyle(fontWeight: FontWeight.w500),
         ),
       ],
-    );
-  }
-}
-
-class _Switch extends StatelessWidget {
-  const _Switch(this.value, this.onChanged);
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        height: 28,
-        width: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        decoration: BoxDecoration(
-          color: value ? Theme.of(context).primaryColor : Colors.white24,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          width: 20,
-          height: 20,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
     );
   }
 }
