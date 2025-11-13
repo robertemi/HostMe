@@ -1,4 +1,5 @@
 class MatchModel {
+  final String id;
   final String name;
   final String message;
   final String timeAgo;
@@ -7,6 +8,7 @@ class MatchModel {
   final int unreadCount;
 
   MatchModel({
+    required this.id,
     required this.name,
     required this.message,
     required this.timeAgo,

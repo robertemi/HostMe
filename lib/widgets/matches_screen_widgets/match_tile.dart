@@ -64,9 +64,16 @@ class MatchTile extends StatelessWidget {
         ],
       ),
       onTap: () {
+        // pass receiver info to ChatScreen
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ChatScreen()),
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              receiverId: match.id,
+              receiverName: match.name,
+              receiverAvatar: match.avatarUrl,
+            ),
+          ),
         );
       },
     );

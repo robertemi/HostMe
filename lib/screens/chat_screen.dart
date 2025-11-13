@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/message_model.dart';
 import '../widgets/chat_screen_widgets/chat_bubble.dart';
 import '../widgets/chat_screen_widgets/chat_input_field.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final String receiverId;
+  final String receiverName;
+  final String receiverAvatar;
+
+  const ChatScreen({
+    super.key,
+    required this.receiverId,
+    required this.receiverName,
+    required this.receiverAvatar,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -14,88 +22,88 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final _channel = WebSocketChannel.connect(
-    Uri.parse('ws://localhost:8000/ws'),
-  );
+  final List<Message> _messages = [];
 
   @override
   void initState() {
     super.initState();
+    _fetchInitialMessages();
+    _listenToMessages();
+  }
 
-    _channel.stream.listen((message) {
-      // The echo server sends back what you sent
-      setState(() {
-        _messages.add(
-          Message(
-            sender: "John Doe",
-            text: message.toString(),
-            time: "Now",
-            isMe: false,
-            avatarUrl: "https://i.pravatar.cc/150?img=3",
+  Future<void> _fetchInitialMessages() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    final response = await Supabase.instance.client
+        .from('messages')
+        .select()
+        .or('sender_id.eq.$userId,receiver_id.eq.$userId')
+        .order('created_at');
+
+    final data = response as List<dynamic>;
+    setState(() {
+      _messages.addAll(
+        data.where((msg) =>
+            (msg['sender_id'] == userId && msg['receiver_id'] == widget.receiverId) ||
+            (msg['sender_id'] == widget.receiverId && msg['receiver_id'] == userId)).map(
+          (msg) => Message(
+            sender: msg['sender_id'],
+            text: msg['text'],
+            time: msg['created_at'],
+            isMe: msg['sender_id'] == userId,
+            avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
           ),
-        );
+        ),
+      );
+    });
+  }
+
+  void _listenToMessages() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    Supabase.instance.client
+        .from('messages')
+        .stream(primaryKey: ['id'])
+        .order('created_at')
+        .listen((List<Map<String, dynamic>> data) {
+      final filtered = data.where((msg) =>
+          (msg['sender_id'] == userId && msg['receiver_id'] == widget.receiverId) ||
+          (msg['sender_id'] == widget.receiverId && msg['receiver_id'] == userId));
+
+      setState(() {
+        _messages
+          ..clear()
+          ..addAll(filtered.map((msg) => Message(
+                sender: msg['sender_id'],
+                text: msg['text'],
+                time: msg['created_at'],
+                isMe: msg['sender_id'] == userId,
+                avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
+              )));
       });
     });
   }
 
-  @override
-  void dispose() {
-    _channel.sink.close();
-    _controller.dispose();
-    super.dispose();
-  }
-
-
-
-  final List<Message> _messages = [
-    Message(
-      sender: "John Doe",
-      text:
-          "Hey! I saw your profile and I'm also looking for a place to stay. I'm a student at the University of California, Berkeley. What about you?",
-      time: "10:30 AM",
-      isMe: false,
-      avatarUrl:
-          "https://i.pravatar.cc/150?img=3", // Example placeholder
-    ),
-    Message(
-      sender: "Jane Doe",
-      text:
-          "Hi John! I'm a student at the University of California, Berkeley as well. I'm looking for a place to stay with a roommate. What's your budget?",
-      time: "10:31 AM",
-      isMe: true,
-      avatarUrl:
-          "https://i.pravatar.cc/150?img=5",
-    ),
-    Message(
-      sender: "John Doe",
-      text: "My budget is around \$1000 per month. What about you?",
-      time: "10:32 AM",
-      isMe: false,
-      avatarUrl:
-          "https://i.pravatar.cc/150?img=3",
-    ),
-  ];
-
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
     final text = _controller.text.trim();
+    final userId = Supabase.instance.client.auth.currentUser?.id;
 
-    setState(() {
-      _messages.add(
-        Message(
-          sender: "Jane Doe",
-          text: text,
-          time: "Now",
-          isMe: true,
-          avatarUrl: "https://i.pravatar.cc/150?img=5",
-        ),
-      );
+    await Supabase.instance.client.from('messages').insert({
+      'sender_id': userId,
+      'receiver_id': widget.receiverId,
+      'text': text,
+      'avatar': 'https://i.pravatar.cc/150?img=5', // current user avatar
     });
 
-    _channel.sink.add(text);
     _controller.clear();
+  }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -104,11 +112,12 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const CircleAvatar(
-              backgroundImage: NetworkImage("https://i.pravatar.cc/150?img=5"),
-            ),
+            CircleAvatar(backgroundImage: NetworkImage(widget.receiverAvatar)),
             const SizedBox(width: 10),
-            const Text("Jane Doe"),
+            Text(
+              widget.receiverName,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         actions: const [
