@@ -47,7 +47,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
         'type': typeController.text,
         'has_elevator': hasElevator,
         'has_personal_heating': hasPersonalHeating,
-        'image': imageController.text,
+        'image': imageController.text.isNotEmpty ? imageController.text : null,
         'number_of_current_roomates': 0, // ✅ matches your DB column
         if (user != null) 'user_id': user.id,
       });
@@ -128,8 +128,9 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         validator: (value) {
-          if (value == null || value.isEmpty) return 'Please enter $label';
-          return null;
+          if ((value == null || value.isEmpty) && value != imageController.text){
+            return 'Please enter $label';
+          }
         },
       ),
     );
