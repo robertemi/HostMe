@@ -32,6 +32,9 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
+      // ✅ Access the user inside the method (not at field declaration)
+      final user = supabase.auth.currentUser;
+
       final response = await supabase.from('houses').insert({
         'address': addressController.text,
         'number_of_rooms': int.tryParse(roomsController.text),
@@ -45,8 +48,12 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
         'has_elevator': hasElevator,
         'has_personal_heating': hasPersonalHeating,
         'image': imageController.text,
-        'number_of_current_r': 0, // start empty
+        'number_of_current_roomates': 0, // ✅ matches your DB column
+        if (user != null) 'user_id': user.id,
       });
+
+      // Optional: check response if you’re on an older SDK
+      // if (response.error != null) throw response.error!;
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
