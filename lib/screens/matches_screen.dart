@@ -5,6 +5,7 @@ import '../widgets/app_bottom_nav_bar.dart';
 import 'home_screen.dart';
 import 'houses_screen.dart';
 import 'profile_screen.dart';
+import 'chat_screen.dart'; // 👈 import your chat screen
 
 class MatchesScreen extends StatefulWidget {
   const MatchesScreen({super.key});
@@ -20,6 +21,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
   Widget build(BuildContext context) {
     final matches = [
       MatchModel(
+        id: 'uuid-olivia', // 👈 added id
         name: 'Olivia',
         message: 'Hey, how are you?',
         timeAgo: '2h ago',
@@ -28,6 +30,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
         unreadCount: 2,
       ),
       MatchModel(
+        id: 'uuid-liam',
         name: 'Liam',
         message: 'Sounds good!',
         timeAgo: '4h ago',
@@ -35,12 +38,14 @@ class _MatchesScreenState extends State<MatchesScreen> {
         isOnline: true,
       ),
       MatchModel(
+        id: 'uuid-sophia',
         name: 'Sophia',
         message: 'See you then!',
         timeAgo: '1d ago',
         avatarUrl: 'https://i.pravatar.cc/150?img=3',
       ),
       MatchModel(
+        id: 'uuid-noah',
         name: 'Noah',
         message: "Let's do it.",
         timeAgo: '3d ago',
@@ -65,7 +70,23 @@ class _MatchesScreenState extends State<MatchesScreen> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: matches.length,
               itemBuilder: (context, index) {
-                return MatchTile(match: matches[index]);
+                final match = matches[index];
+                return GestureDetector(
+                  onTap: () {
+                    // 👇 Navigate to ChatScreen with match details
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatScreen(
+                          receiverId: match.id,
+                          receiverName: match.name,
+                          receiverAvatar: match.avatarUrl,
+                        ),
+                      ),
+                    );
+                  },
+                  child: MatchTile(match: match),
+                );
               },
             ),
       bottomNavigationBar: AppBottomNavBar(
@@ -127,6 +148,4 @@ class _MatchesScreenState extends State<MatchesScreen> {
       ),
     );
   }
-
-  // Removed legacy bottom nav implementation; now handled by AppBottomNavBar.
 }
