@@ -29,12 +29,11 @@ class ProfileModel {
   final String? preferredLocation;
   final DateTime? moveInDate; // date
 
-  // Preferences (DB uses text for these)
-  final String? smokingPreference;   // e.g., 'no', 'occasionally', 'yes'
-  final String? petsPreference;      // e.g., 'no', 'maybe', 'yes'
-  final String? guestsPreference;    // e.g., 'rarely', 'sometimes', 'often'
-  final String? cleanlinessLevel;    // store '1'..'5' or words; see helpers below
-  final String? noiseLevel;          // store '1'..'5' or words
+  // Preferences
+  final bool? smokingPreference;   // boolean
+  final bool? petsPreference;      // boolean
+  final int? cleanlinessLevel;     // 1..5
+  final int? noiseLevel;           // 1..5
 
   // Flags
   final bool? emailVerified;
@@ -63,7 +62,6 @@ class ProfileModel {
     this.moveInDate,
     this.smokingPreference,
     this.petsPreference,
-    this.guestsPreference,
     this.cleanlinessLevel,
     this.noiseLevel,
     this.emailVerified,
@@ -117,11 +115,10 @@ class ProfileModel {
       budgetMax: _parseInt(map['budget_max']),
       preferredLocation: map['preferred_location'] as String?,
       moveInDate: _parseDate(map['move_in_date']),
-      smokingPreference: map['smoking_preference'] as String?,
-      petsPreference: map['pets_preference'] as String?,
-      guestsPreference: map['guests_preference'] as String?,
-      cleanlinessLevel: map['cleanliness_level'] as String?,
-      noiseLevel: map['noise_level'] as String?,
+      smokingPreference: _parseBool(map['smoking_preference']),
+      petsPreference: _parseBool(map['pets_preference']),
+      cleanlinessLevel: _parseInt(map['cleanliness_level']),
+      noiseLevel: _parseInt(map['noise_level']),
       emailVerified: _parseBool(map['email_verified']),
       isActive: _parseBool(map['is_active']),
       createdAt: _parseDate(map['created_at']),
@@ -150,7 +147,6 @@ class ProfileModel {
       'move_in_date': moveInDate?.toIso8601String(),
       'smoking_preference': smokingPreference,
       'pets_preference': petsPreference,
-      'guests_preference': guestsPreference,
       'cleanliness_level': cleanlinessLevel,
       'noise_level': noiseLevel,
       'email_verified': emailVerified,
@@ -178,11 +174,11 @@ class ProfileModel {
     int? budgetMax,
     String? preferredLocation,
     DateTime? moveInDate,
-    String? smokingPreference,
-    String? petsPreference,
+    bool? smokingPreference,
+    bool? petsPreference,
     String? guestsPreference,
-    String? cleanlinessLevel,
-    String? noiseLevel,
+    int? cleanlinessLevel,
+    int? noiseLevel,
     bool? emailVerified,
     bool? isActive,
     DateTime? createdAt,
@@ -208,7 +204,6 @@ class ProfileModel {
       moveInDate: moveInDate ?? this.moveInDate,
       smokingPreference: smokingPreference ?? this.smokingPreference,
       petsPreference: petsPreference ?? this.petsPreference,
-      guestsPreference: guestsPreference ?? this.guestsPreference,
       cleanlinessLevel: cleanlinessLevel ?? this.cleanlinessLevel,
       noiseLevel: noiseLevel ?? this.noiseLevel,
       emailVerified: emailVerified ?? this.emailVerified,
@@ -220,8 +215,8 @@ class ProfileModel {
 
   // ---------- Convenience getters ----------
   /// If you store '1'..'5' for levels, this gives you an int safely.
-  int? get cleanlinessLevelInt => int.tryParse((cleanlinessLevel ?? '').trim());
-  int? get noiseLevelInt => int.tryParse((noiseLevel ?? '').trim());
+  int? get cleanlinessLevelInt => cleanlinessLevel;
+  int? get noiseLevelInt => noiseLevel;
 
   /// Human label for budget (optional helper)
   String get budgetLabel {

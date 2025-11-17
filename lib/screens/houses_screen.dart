@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/common/app_bottom_nav_bar.dart';
 import 'home_screen.dart';
 import 'matches_screen.dart';
 import 'profile_screen.dart';

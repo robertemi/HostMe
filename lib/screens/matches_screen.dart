@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/match_model.dart';
 import '../widgets/matches_screen_widgets/match_tile.dart';
-import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/common/app_bottom_nav_bar.dart';
 import 'home_screen.dart';
 import 'houses_screen.dart';
 import 'profile_screen.dart';

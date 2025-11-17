@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import '../progress_bar_segment.dart';
-import '../overlapping_avatars.dart';
+import '../common/progress_bar_segment.dart';
+import '../common/overlapping_avatars.dart';
 
 class HouseDetailCard extends StatelessWidget {
   const HouseDetailCard({

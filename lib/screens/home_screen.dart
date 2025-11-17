@@ -5,7 +5,7 @@ import '../widgets/home_screen_widgets/hero_section.dart';
 import '../widgets/home_screen_widgets/segmented_two_choice.dart';
 import '../widgets/home_screen_widgets/info_card.dart';
 import '../widgets/home_screen_widgets/primary_button.dart';
-import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/common/app_bottom_nav_bar.dart';
 import 'login_screen.dart';
 import 'houses_screen.dart';
 import 'matches_screen.dart';

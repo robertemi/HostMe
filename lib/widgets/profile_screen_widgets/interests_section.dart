@@ -1,20 +1,54 @@
 import 'package:flutter/material.dart';
+//TODO : Make the inerests section responsive (no more pixel overflow )
+class InterestsSection extends StatefulWidget {
+  const InterestsSection({super.key, this.initialInterests = const []});
 
-class InterestsSection extends StatelessWidget {
-  const InterestsSection({
-    super.key,
-    required this.interests,
-    required this.highlighted,
-    this.onAdd,
-  });
-
-  final List<String> interests;
-  final Set<String> highlighted; // which interests should use primary styling
-  final VoidCallback? onAdd;
+  final List<String> initialInterests;
 
   @override
+  State<InterestsSection> createState() => _InterestsSectionState();
+}
+
+class _InterestsSectionState extends State<InterestsSection> {
+  late List<String> _interests;
+
+  @override
+  void initState() {
+    super.initState();
+    _interests = List.of(widget.initialInterests);
+  }
+// Modal for adding a new interest
+  Future<void> _addInterest() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Add interest'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'e.g., Cooking'),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result != null && result.isNotEmpty) {
+      setState(() => _interests.add(result));
+    }
+  }
+// Main build method for the interests section
+  @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      spacing: 4,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
@@ -30,13 +64,10 @@ class InterestsSection extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final interest in interests)
-              _InterestChip(
-                label: interest,
-                highlighted: highlighted.contains(interest),
-              ),
+            for (final interest in _interests)
+              _InterestChip(label: interest),
             GestureDetector(
-              onTap: onAdd,
+              onTap: _addInterest,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 height: 32,
@@ -51,25 +82,24 @@ class InterestsSection extends StatelessWidget {
                     SizedBox(width: 4),
                     Text(
                       'Add',
-                      style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle( color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
             ),
           ],
-        )
+        ),
       ],
     );
   }
 }
 
 class _InterestChip extends StatelessWidget {
-  const _InterestChip({required this.label, required this.highlighted});
+  const _InterestChip({required this.label});
 
   final String label;
-  final bool highlighted;
-
+// Chip UI for an interest in the interests section
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).primaryColor;
@@ -77,16 +107,16 @@ class _InterestChip extends StatelessWidget {
       height: 32,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: highlighted ? primary.withOpacity(0.25) : Colors.white.withOpacity(0.15),
+        color: primary.withOpacity(0.45),
         borderRadius: BorderRadius.circular(999),
       ),
       alignment: Alignment.center,
       child: Text(
         label,
         style: TextStyle(
-          color: highlighted ? primary : Colors.white,
+          color: Theme.of(context).colorScheme.onPrimary,
           fontSize: 13,
-          fontWeight: highlighted ? FontWeight.w700 : FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

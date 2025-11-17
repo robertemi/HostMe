@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import '../models/location_model.dart';
+import '../../models/location_model.dart';
 
 class LocationMarker {
   static Marker buildMarker(LocationModel location) {

@@ -8,6 +8,8 @@ import '../theme.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
+import 'account_setup_screen.dart';
+import '../services/profile_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -136,8 +138,11 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
             backgroundColor: Color(0xFF388E3C),
           ),
         );
+        final userId = response.user!.id;
+        final complete = await ProfileService().isProfileComplete(userId);
+        final target = complete ? const HomeScreen() : const AccountSetupScreen();
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => target),
         );
       } else {
         _showError('Login failed. Please check your credentials.');

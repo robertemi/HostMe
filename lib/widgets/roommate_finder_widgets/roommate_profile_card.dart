@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../tag_chip.dart';
+import '../common/tag_chip.dart';
 
 class RoommateProfileCard extends StatelessWidget {
   const RoommateProfileCard({
