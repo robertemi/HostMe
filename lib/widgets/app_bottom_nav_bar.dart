@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class AppBottomNavBar extends StatelessWidget {
@@ -9,7 +8,7 @@ class AppBottomNavBar extends StatelessWidget {
     required this.onTap,
   });
 
-  final int currentIndex;
+  final int currentIndex; // 0 = Home, 1 = Matches, 2 = Profile
   final ValueChanged<int> onTap;
 
   @override
@@ -25,7 +24,7 @@ class AppBottomNavBar extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor.withValues(alpha: 0.9),
-            border: Border(top: BorderSide(color: Colors.black12)),
+            border: const Border(top: BorderSide(color: Colors.black12)),
           ),
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: SafeArea(
@@ -42,28 +41,20 @@ class AppBottomNavBar extends StatelessWidget {
                   onTap: () => onTap(0),
                 ),
                 _NavItem(
-                  icon: Icons.search,
-                  label: 'Discover',
+                  icon: Icons.favorite,
+                  label: 'Matches',
                   selected: currentIndex == 1,
                   active: active,
                   inactive: inactive,
                   onTap: () => onTap(1),
                 ),
                 _NavItem(
-                  icon: Icons.favorite,
-                  label: 'Matches',
+                  icon: Icons.person,
+                  label: 'Profile',
                   selected: currentIndex == 2,
                   active: active,
                   inactive: inactive,
                   onTap: () => onTap(2),
-                ),
-                _NavItem(
-                  icon: Icons.person,
-                  label: 'Profile',
-                  selected: currentIndex == 3,
-                  active: active,
-                  inactive: inactive,
-                  onTap: () => onTap(3),
                 ),
               ],
             ),
@@ -119,4 +110,3 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
-// --- IGNORE ---
