@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_service.dart';
 import '../models/profile_model.dart';
-import 'home_screen.dart';
+import 'root_shell.dart';
 import '../widgets/common/labeled_slider.dart';
 
 class AccountSetupScreen extends StatefulWidget {
@@ -61,6 +61,41 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
         'Other',
       ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Ensure UI updates (Next button enabled state) when relevant text fields change.
+    _nameCtrl.addListener(_onFieldChanged);
+    _phoneCtrl.addListener(_onFieldChanged);
+    _budgetMinCtrl.addListener(_onFieldChanged);
+    _budgetMaxCtrl.addListener(_onFieldChanged);
+    _avatarUrlCtrl.addListener(_onFieldChanged);
+    _universityCtrl.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    // Only rebuild to update Next button enabled state.
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _avatarUrlCtrl.removeListener(_onFieldChanged);
+    _nameCtrl.removeListener(_onFieldChanged);
+    _phoneCtrl.removeListener(_onFieldChanged);
+    _universityCtrl.removeListener(_onFieldChanged);
+    _budgetMinCtrl.removeListener(_onFieldChanged);
+    _budgetMaxCtrl.removeListener(_onFieldChanged);
+
+    _avatarUrlCtrl.dispose();
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _universityCtrl.dispose();
+    _budgetMinCtrl.dispose();
+    _budgetMaxCtrl.dispose();
+    super.dispose();
+  }
+
   void _next() {
     if (_step < _totalSteps - 1) {
       setState(() => _step++);
@@ -100,16 +135,22 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       );
       await _profileService.upsertProfile(profile);
       if (!mounted) return;
+      // Persist succeeded — notify user and navigate into the app shell.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("You're all set!")),
       );
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const RootShell()),
+        (route) => false,
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving profile: $e')),
+          SnackBar(
+            content: Text('Error saving profile: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } finally {

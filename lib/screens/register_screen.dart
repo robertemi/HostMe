@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
+import 'account_setup_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -120,8 +121,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SnackBar(content: Text('Account created! Please check your email to verify.'), backgroundColor: Color(0xFF388E3C)),
         );
 
-        // Navigate back to login screen
-        Navigator.of(context).pop();
+        // Navigate to account setup so the user can complete their profile
+        // After account setup completes the app will route into RootShell.
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AccountSetupScreen()),
+        );
       } else {
         _showError('Registration failed. Please try again.');
       }

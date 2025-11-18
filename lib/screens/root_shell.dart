@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bottom_nav_bar.dart';
+import '../widgets/common/app_bottom_nav_bar.dart';
 import 'home_screen.dart';
 import 'houses_screen.dart';
 import 'matches_screen.dart';
 import 'profile_screen.dart';
 
 class RootShell extends StatefulWidget {
-  const RootShell({super.key});
+  /// [initialIndex] controls which tab is shown when the shell is first displayed.
+  /// Defaults to 0 (Home).
+  const RootShell({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   State<RootShell> createState() => _RootShellState();
 }
 
 class _RootShellState extends State<RootShell> {
-  final PageController _pageController = PageController();
-  int _currentIndex = 0;
+  late final PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
 
   @override
   void dispose() {
