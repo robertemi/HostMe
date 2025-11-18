@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class AppBottomNavBar extends StatelessWidget {
@@ -6,10 +5,12 @@ class AppBottomNavBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.pageController,
   });
 
   final int currentIndex; // 0 = Home, 1 = Matches, 2 = Profile
   final ValueChanged<int> onTap;
+  final PageController? pageController;
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +19,19 @@ class AppBottomNavBar extends StatelessWidget {
         ? Colors.white70
         : Colors.grey.shade600;
 
+    // Simple opaque Material nav bar with three buttons (Home, Matches, Profile)
+    final theme = Theme.of(context);
+    final navBg = theme.colorScheme.surface; // opaque surface color
+
     return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+      child: Material(
+        color: navBg,
+        elevation: 8,
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withValues(alpha: 0.9),
-            border: const Border(top: BorderSide(color: Colors.black12)),
+            color: navBg,
+            border: Border(top: BorderSide(color: theme.dividerColor)),
           ),
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: SafeArea(
@@ -38,7 +45,13 @@ class AppBottomNavBar extends StatelessWidget {
                   selected: currentIndex == 0,
                   active: active,
                   inactive: inactive,
-                  onTap: () => onTap(0),
+                  onTap: () {
+                    if (pageController != null) {
+                      pageController!.jumpToPage(0);
+                    } else {
+                      onTap(0);
+                    }
+                  },
                 ),
                 _NavItem(
                   icon: Icons.favorite,
@@ -46,7 +59,13 @@ class AppBottomNavBar extends StatelessWidget {
                   selected: currentIndex == 1,
                   active: active,
                   inactive: inactive,
-                  onTap: () => onTap(1),
+                  onTap: () {
+                    if (pageController != null) {
+                      pageController!.jumpToPage(1);
+                    } else {
+                      onTap(1);
+                    }
+                  },
                 ),
                 _NavItem(
                   icon: Icons.person,
@@ -54,7 +73,13 @@ class AppBottomNavBar extends StatelessWidget {
                   selected: currentIndex == 2,
                   active: active,
                   inactive: inactive,
-                  onTap: () => onTap(2),
+                  onTap: () {
+                    if (pageController != null) {
+                      pageController!.jumpToPage(2);
+                    } else {
+                      onTap(2);
+                    }
+                  },
                 ),
               ],
             ),

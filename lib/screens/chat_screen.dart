@@ -109,6 +109,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Row(
           children: [
@@ -126,22 +127,28 @@ class _ChatScreenState extends State<ChatScreen> {
           SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return ChatBubble(message: _messages[index]);
-              },
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  return ChatBubble(message: _messages[index]);
+                },
+              ),
             ),
-          ),
-          ChatInputField(
-            controller: _controller,
-            onSend: _sendMessage,
-          ),
-        ],
+            SafeArea(
+              top: false,
+              child: ChatInputField(
+                controller: _controller,
+                onSend: _sendMessage,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

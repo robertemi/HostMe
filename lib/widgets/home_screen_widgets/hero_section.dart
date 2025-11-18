@@ -27,41 +27,6 @@ class HeroSection extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background image (optional)
-          if (backgroundImage != null)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: backgroundImage!,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            )
-          else
-            // Fallback decorative gradient if no image provided
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF222222), Color(0xFF000000)],
-                ),
-              ),
-            ),
-          // Dark overlay gradient for readability
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.2),
-                  Colors.black.withValues(alpha: 0.5),
-                ],
-              ),
-            ),
-          ),
-          // Foreground content
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Center(

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:host_me/widgets/app_bottom_nav_bar.dart';
+// Bottom navigation moved to RootShell
 import 'package:host_me/widgets/profile_screen_widgets/profile_header.dart';
 import 'package:host_me/widgets/profile_screen_widgets/profile_avatar_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/profile_progress_bar.dart';
 import 'package:host_me/widgets/profile_screen_widgets/interests_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/activity_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/preferences_section.dart';
-import 'home_screen.dart';
-import 'houses_screen.dart';
-import 'matches_screen.dart';
+// navigation handled by RootShell
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,34 +23,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool smoking = false;
   bool pets = true;
 
-  void _onNavTap(int index) {
-    if (index == 3) return; // already on profile
-    Widget target;
-    switch (index) {
-      case 0:
-        target = const HomeScreen();
-        break;
-      case 1:
-        target = const HousesScreen();
-        break;
-      case 2:
-      default:
-        target = const MatchesScreen();
-    }
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => target),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
       appBar: const ProfileHeader(),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 3,
-        onTap: _onNavTap,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         child: Column(

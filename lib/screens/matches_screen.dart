@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/match_model.dart';
 import '../widgets/matches_screen_widgets/match_tile.dart';
-import '../widgets/app_bottom_nav_bar.dart';
-import 'home_screen.dart';
-import 'houses_screen.dart';
-import 'profile_screen.dart';
+// bottom nav is provided by RootShell
 import 'chat_screen.dart'; // 👈 import your chat screen
 
 class MatchesScreen extends StatefulWidget {
@@ -15,7 +12,7 @@ class MatchesScreen extends StatefulWidget {
 }
 
 class _MatchesScreenState extends State<MatchesScreen> {
-  int navIndex = 2;
+  // nav handled by RootShell
 
   @override
   Widget build(BuildContext context) {
@@ -89,30 +86,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
                 );
               },
             ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: navIndex,
-        onTap: (i) {
-          if (i == navIndex) return;
-          Widget target;
-          switch (i) {
-            case 0:
-              target = const HomeScreen();
-              break;
-            case 1:
-              target = const HousesScreen();
-              break;
-            case 2:
-              target = const MatchesScreen();
-              break;
-            case 3:
-            default:
-              target = const ProfileScreen();
-          }
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => target),
-          );
-        },
-      ),
+      // bottom nav provided by RootShell
     );
   }
 

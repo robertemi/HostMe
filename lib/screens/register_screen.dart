@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../theme.dart';
 import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -148,162 +147,180 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 8),
-                  Text('Welcome!', textAlign: TextAlign.center, style: GoogleFonts.plusJakartaSans(fontSize: 26, fontWeight: FontWeight.w800, color: AppTheme.colorDarkerBrown)),
-                  const SizedBox(height: 8),
-                  Text('Create an account to get started.', textAlign: TextAlign.center, style: GoogleFonts.plusJakartaSans(fontSize: 14, color: AppTheme.colorLightest)),
-                  const SizedBox(height: 24),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 8),
+                    Text('Welcome!', textAlign: TextAlign.center, style: GoogleFonts.plusJakartaSans(fontSize: 26, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface)),
+                    const SizedBox(height: 8),
+                    Text('Create an account to get started.', textAlign: TextAlign.center, style: GoogleFonts.plusJakartaSans(fontSize: 14, color: theme.colorScheme.onSurface.withOpacity(0.85))),
+                    const SizedBox(height: 24),
 
-                  Text('Full name', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.colorDarkerBrown)),
-                  const SizedBox(height: 8),
-                  TextField(controller: _nameController, decoration: const InputDecoration(hintText: 'Your full name')),
-                  const SizedBox(height: 16),
+                    Text('Full name', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+                    const SizedBox(height: 8),
+                    TextField(controller: _nameController, decoration: InputDecoration(hintText: 'Your full name', filled: true, fillColor: theme.inputDecorationTheme.fillColor, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)))),
+                    const SizedBox(height: 16),
 
-                  Text('Email', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.colorDarkerBrown)),
-                  const SizedBox(height: 8),
-                  TextField(controller: _emailController, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Enter your email')),
-                  const SizedBox(height: 16),
+                    Text('Email', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+                    const SizedBox(height: 8),
+                    TextField(controller: _emailController, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(hintText: 'Enter your email', filled: true, fillColor: theme.inputDecorationTheme.fillColor, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)))),
+                    const SizedBox(height: 16),
 
-                  Text('Password', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.colorDarkerBrown)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword ?? true,
-                    decoration: InputDecoration(
-                      hintText: 'Create a password',
-                      suffixIcon: IconButton(
-                        icon: Icon((_obscurePassword ?? true) ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () {
-                          setState(() {
-                            final current = _obscurePassword ?? true;
-                            _obscurePassword = !current;
-                          });
-                        },
+                    Text('Password', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword ?? true,
+                      decoration: InputDecoration(
+                        hintText: 'Create a password',
+                        filled: true,
+                        fillColor: theme.inputDecorationTheme.fillColor,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
+                        suffixIcon: IconButton(
+                          icon: Icon((_obscurePassword ?? true) ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () {
+                            setState(() {
+                              final current = _obscurePassword ?? true;
+                              _obscurePassword = !current;
+                            });
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  // Password strength indicator
-                  if (_passwordController.text.isNotEmpty) ...[
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: _passwordStrength,
-                                  minHeight: 6,
-                                  backgroundColor: Colors.grey[300],
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    _passwordStrength < 0.4 ? const Color(0xFFD32F2F) :
-                                    _passwordStrength < 0.7 ? const Color(0xFFF57C00) :
-                                    const Color(0xFF388E3C),
+                    const SizedBox(height: 12),
+
+                    // Password strength indicator
+                    if (_passwordController.text.isNotEmpty) ...[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: _passwordStrength,
+                                    minHeight: 6,
+                                    backgroundColor: Colors.grey[300],
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      _passwordStrength < 0.4 ? const Color(0xFFD32F2F) :
+                                      _passwordStrength < 0.7 ? const Color(0xFFF57C00) :
+                                      const Color(0xFF388E3C),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _passwordStrength < 0.4 ? 'Weak' :
-                              _passwordStrength < 0.7 ? 'Medium' : 'Strong',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: _passwordStrength < 0.4 ? const Color(0xFFD32F2F) :
-                                       _passwordStrength < 0.7 ? const Color(0xFFF57C00) :
-                                       const Color(0xFF388E3C),
+                              const SizedBox(width: 8),
+                              Text(
+                                _passwordStrength < 0.4 ? 'Weak' :
+                                _passwordStrength < 0.7 ? 'Medium' : 'Strong',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _passwordStrength < 0.4 ? const Color(0xFFD32F2F) :
+                                         _passwordStrength < 0.7 ? const Color(0xFFF57C00) :
+                                         const Color(0xFF388E3C),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRequirement('At least 8 characters', _hasMinLength),
-                        _buildRequirement('One uppercase letter', _hasUppercase),
-                        _buildRequirement('One lowercase letter', _hasLowercase),
-                        _buildRequirement('One number', _hasNumber),
-                        _buildRequirement('One special character', _hasSpecialChar),
-                      ],
-                    ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _buildRequirement('At least 8 characters', _hasMinLength),
+                          _buildRequirement('One uppercase letter', _hasUppercase),
+                          _buildRequirement('One lowercase letter', _hasLowercase),
+                          _buildRequirement('One number', _hasNumber),
+                          _buildRequirement('One special character', _hasSpecialChar),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+
                     const SizedBox(height: 8),
-                  ],
 
-                  const SizedBox(height: 8),
-
-                  Text('Confirm password', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.colorDarkerBrown)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _confirmController,
-                    obscureText: _obscureConfirm ?? true,
-                    decoration: InputDecoration(
-                      hintText: 'Confirm your password',
-                      suffixIcon: IconButton(
-                        icon: Icon((_obscureConfirm ?? true) ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () {
-                          setState(() {
-                            final current = _obscureConfirm ?? true;
-                            _obscureConfirm = !current;
-                          });
-                        },
+                    Text('Confirm password', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _confirmController,
+                      obscureText: _obscureConfirm ?? true,
+                      decoration: InputDecoration(
+                        hintText: 'Confirm your password',
+                        filled: true,
+                        fillColor: theme.inputDecorationTheme.fillColor,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
+                        suffixIcon: IconButton(
+                          icon: Icon((_obscureConfirm ?? true) ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () {
+                            setState(() {
+                              final current = _obscureConfirm ?? true;
+                              _obscureConfirm = !current;
+                            });
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handleRegister,
-                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.colorDarkerBrown, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Text('Create account', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
-                  ),
-
-                  const SizedBox(height: 12),
-                  Center(child: Text('By creating an account you agree to our Terms.', style: GoogleFonts.plusJakartaSans(color: AppTheme.colorLightest, fontSize: 12), textAlign: TextAlign.center)),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text("Already have an account? ", style: GoogleFonts.plusJakartaSans(color: AppTheme.colorDarkerBrown)),
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text('Sign In', style: GoogleFonts.plusJakartaSans(color: primary, fontWeight: FontWeight.w700)),
-                        ),
-                      ],
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _handleRegister,
+                      style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.primary, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text('Create account', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
+
+                    const SizedBox(height: 12),
+                    Center(child: Text('By creating an account you agree to our Terms.', style: GoogleFonts.plusJakartaSans(color: theme.colorScheme.onSurface.withOpacity(0.75), fontSize: 12), textAlign: TextAlign.center)),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text("Already have an account? ", style: GoogleFonts.plusJakartaSans(color: theme.colorScheme.onSurface)),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Sign In', style: GoogleFonts.plusJakartaSans(color: theme.colorScheme.primary, fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
           ),
@@ -328,7 +345,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             text,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
-              color: isMet ? AppTheme.colorDarkerBrown : primary,
+              color: isMet ? Theme.of(context).colorScheme.onSurface : primary,
               decoration: isMet ? TextDecoration.lineThrough : null,
             ),
           ),
