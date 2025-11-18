@@ -10,6 +10,8 @@ import 'login_screen.dart';
 import 'houses_screen.dart';
 import 'matches_screen.dart';
 import 'profile_screen.dart';
+import 'roommate_finder_screen.dart';
+import 'add_house_screen.dart'; // 🆕 import the new screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,6 +24,49 @@ class _HomeScreenState extends State<HomeScreen> {
   final authService = AuthService();
   int selectedChoice = 0; // 0 = Find a Roommate, 1 = Find a Place
   int navIndex = 0; // 0 = Home
+
+  void _onNavTap(int i) {
+    if (i == navIndex) return;
+    Widget target;
+    switch (i) {
+      case 0:
+        target = const HomeScreen();
+        break;
+      case 1:
+        target = const MatchesScreen();
+        break;
+      case 2:
+      default:
+        target = const ProfileScreen();
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => target),
+    );
+  }
+
+  void _onSearch() {
+    if (selectedChoice == 1) {
+      // 🏠 “Find a Place” → go to HousesScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const HousesScreen()),
+      );
+    } else {
+      // 👥 “Find a Roommate” → RoommateFinderScreen (or placeholder)
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const RoommateFinderScreen()),
+      );
+    }
+  }
+
+  void _onListProperty() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddHouseScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,31 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: navIndex,
-        onTap: (i) {
-          if (i == navIndex) return;
-          Widget target;
-            switch (i) {
-              case 0:
-                target = const HomeScreen();
-                break;
-              case 1:
-                target = const HousesScreen();
-                break;
-              case 2:
-                target = const MatchesScreen();
-                break;
-              case 3:
-              default:
-                target = const ProfileScreen();
-            }
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => target),
-          );
-        },
+        onTap: _onNavTap,
       ),
       body: HeroSection(
-        // If you add a background asset, pass it via: backgroundImage: AssetImage('assets/your_image.jpg')
-        backgroundImage: AssetImage('assets/Final-housing-for-all-pillar.jpg'),
+        backgroundImage:
+            const AssetImage('assets/Final-housing-for-all-pillar.jpg'),
         title: 'Welcome to Student Housing',
         subtitle: 'Find your perfect match for roommates and housing.',
         child: Column(
@@ -104,18 +129,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   PrimaryPillButton(
                     label: 'Search',
-                    onPressed: () {
-                      // TODO: Hook up to search flow based on selectedChoice
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            selectedChoice == 0
-                                ? 'Searching for roommates...'
-                                : 'Searching for places...',
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: _onSearch,
+                  ),
+                  const SizedBox(height: 16),
+                  // 🏡 New Button to list a property
+                  ElevatedButton.icon(
+                    onPressed: _onListProperty,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).primaryColor,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 24,
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_home),
+                    label: const Text(
+                      'List Your Property',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ],
               ),
@@ -126,4 +162,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-// --- IGNORE ---
