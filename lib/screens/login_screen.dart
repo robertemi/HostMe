@@ -7,6 +7,7 @@ import 'register_screen.dart';
 import 'root_shell.dart';
 import 'account_setup_screen.dart';
 import '../services/profile_service.dart';
+import '../utils/notifications.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,16 +40,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-  final response = await _authService.signIn(email: email, password: password);
+      final response = await _authService.signIn(email: email, password: password);
       if (!mounted) return;
       if (response.user != null) {
-        // Show a success snackbar (green).
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Color(0xFF388E3C),
-          ),
-        );
+        // Show a success banner/snack
+        await showAppSuccess(context, 'Login successful!');
 
         // Check whether the user's profile is complete. If it is, navigate to
         // the persistent RootShell so the bottom navigation and PageView are
@@ -77,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Theme.of(context).colorScheme.error));
+      showAppError(context, message);
     }
   }
 
@@ -179,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           final response = await _authService.signInWithGoogleNative();
                           if (!mounted) return;
                           if (response.user != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Google sign-in successful!')));
+                            await showAppSuccess(context, 'Google sign-in successful!');
                             Navigator.of(context).pushAndRemoveUntil(
                               MaterialPageRoute(builder: (_) => const RootShell()),
                               (route) => false,

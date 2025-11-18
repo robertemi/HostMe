@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import 'account_setup_screen.dart';
+import '../utils/notifications.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -116,13 +117,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (response.user != null) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created! Please check your email to verify.'), backgroundColor: Color(0xFF388E3C)),
-        );
-
-        // Navigate to account setup so the user can complete their profile
-        // After account setup completes the app will route into RootShell.
+        // Show success message then navigate to account setup.
+        await showAppSuccess(context, 'Account created! Please check your email to verify.');
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AccountSetupScreen()),
         );
@@ -141,12 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFD32F2F),
-      ),
-    );
+    showAppError(context, message);
   }
 
   @override

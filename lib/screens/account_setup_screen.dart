@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_service.dart';
+import '../utils/notifications.dart';
 import '../models/profile_model.dart';
 import 'root_shell.dart';
 import '../widgets/common/labeled_slider.dart';
@@ -77,7 +78,6 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     // Only rebuild to update Next button enabled state.
     if (mounted) setState(() {});
   }
-
   @override
   void dispose() {
     _avatarUrlCtrl.removeListener(_onFieldChanged);
@@ -136,22 +136,20 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       await _profileService.upsertProfile(profile);
       if (!mounted) return;
       // Persist succeeded — notify user and navigate into the app shell.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("You're all set!")),
-      );
+      await showAppSuccess(context, "You're all set!");
+      // Debug: confirm navigation will be attempted
+      // ignore: avoid_print
+      print('[AccountSetup] profile upsert succeeded for user=${profile.id}');
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const RootShell()),
         (route) => false,
       );
     } catch (e) {
+      // ignore: avoid_print
+      print('[AccountSetup] error saving profile: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving profile: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        await showAppError(context, 'Error saving profile: ${e.toString()}', actionLabel: 'Retry', onAction: _submit);
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
