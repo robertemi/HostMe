@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'root_shell.dart';
+import 'account_setup_screen.dart';
+import '../services/profile_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,11 +41,29 @@ class _LoginScreenState extends State<LoginScreen> {
   final response = await _authService.signIn(email: email, password: password);
       if (!mounted) return;
       if (response.user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful!')));
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const RootShell()),
-          (route) => false,
+        // Show a success snackbar (green).
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: Color(0xFF388E3C),
+          ),
         );
+
+        // Check whether the user's profile is complete. If it is, navigate to
+        // the persistent RootShell so the bottom navigation and PageView are
+        // available. If not, send the user to the account setup flow.
+        final userId = response.user!.id;
+        final complete = await ProfileService().isProfileComplete(userId);
+        if (complete) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const RootShell()),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const AccountSetupScreen()),
+          );
+        }
       } else {
         _showError('Login failed. Please check credentials.');
       }

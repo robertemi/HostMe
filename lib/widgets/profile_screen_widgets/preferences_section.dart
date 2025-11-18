@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common/labeled_slider.dart';
 
 class PreferencesSection extends StatelessWidget {
   final double cleanlinessLevel;
@@ -44,17 +45,17 @@ class PreferencesSection extends StatelessWidget {
 
             // Budget slider
             const Text('Budget'),
-            _LabeledSlider(
+            LabeledSlider(
               min: 1,
               max: 5,
               value: budgetLevel,
               onChanged: onBudgetChanged,
               labels: const [
-                'Under \$500',
-                '\$500-\$800',
-                '\$800-\$1000',
-                '\$1000-\$1500',
-                'Over \$1500',
+                'Under \€100',
+                '\€100-\€300',
+                '\€300-\€500',
+                '\€500-\€1000',
+                'Over \€1000',
               ],
             ),
 
@@ -62,7 +63,7 @@ class PreferencesSection extends StatelessWidget {
 
             // Cleanliness slider
             const Text('Cleanliness'),
-            _LabeledSlider(
+            LabeledSlider(
               min: 1,
               max: 5,
               value: cleanlinessLevel,
@@ -80,7 +81,7 @@ class PreferencesSection extends StatelessWidget {
 
             // Noise slider
             const Text('Noise Level'),
-            _LabeledSlider(
+            LabeledSlider(
               min: 1,
               max: 5,
               value: noiseLevel,
@@ -117,44 +118,6 @@ class PreferencesSection extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _LabeledSlider extends StatelessWidget {
-  final double min;
-  final double max;
-  final double value;
-  final ValueChanged<double> onChanged;
-  final List<String> labels;
-
-  const _LabeledSlider({
-    required this.min,
-    required this.max,
-    required this.value,
-    required this.onChanged,
-    required this.labels,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final index = value.round().clamp(1, labels.length) - 1;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Slider(
-          min: min,
-          max: max,
-          divisions: (max - min).toInt(),
-          value: value.clamp(min, max),
-          onChanged: onChanged,
-          label: labels[index],
-        ),
-        Text(
-          labels[index],
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-      ],
     );
   }
 }

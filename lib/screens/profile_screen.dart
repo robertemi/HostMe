@@ -6,7 +6,12 @@ import 'package:host_me/widgets/profile_screen_widgets/profile_progress_bar.dart
 import 'package:host_me/widgets/profile_screen_widgets/interests_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/activity_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/preferences_section.dart';
-// navigation handled by RootShell
+import 'home_screen.dart';
+import 'houses_screen.dart';
+import 'matches_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/profile_service.dart';
+import '../models/profile_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,13 +21,55 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Local state (later these will come from your Supabase profile)
-  double budget = 3;
-  double cleanliness = 4;
-  double noise = 2;
+  // Values displayed in PreferencesSection (initialized from Supabase profile)
+  double budget = 3; // 1..5 category derived from budgetMin/Max
+  double cleanliness = 3;
+  double noise = 3;
   bool smoking = false;
-  bool pets = true;
+  bool pets = false;
 
+  ProfileModel? _profile;
+  bool _loadingProfile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      final fetched = await ProfileService().fetchProfile(user.id);
+      setState(() {
+        _profile = fetched;
+        // Map DB values to UI
+        cleanliness = (fetched?.cleanlinessLevel ?? 3).toDouble();
+        noise = (fetched?.noiseLevel ?? 3).toDouble();
+        smoking = fetched?.smokingPreference ?? false;
+        pets = fetched?.petsPreference ?? false;
+        budget = _computeBudgetLevel(fetched?.budgetMin, fetched?.budgetMax);
+        _loadingProfile = false;
+      });
+    } else {
+      setState(() => _loadingProfile = false);
+    }
+  }
+
+  double _computeBudgetLevel(int? min, int? max) {
+    if (min == null && max == null) return 3;
+    final values = [
+      if (min != null) min.toDouble(),
+      if (max != null) max.toDouble(),
+    ];
+    final v = values.isEmpty ? 0 : (values.reduce((a, b) => a + b) / values.length);
+    // Match labels in PreferencesSection (EUR): <100, 100-300, 300-500, 500-1000, >1000
+    if (v <= 100) return 1;
+    if (v <= 300) return 2;
+    if (v <= 500) return 3;
+    if (v <= 1000) return 4;
+    return 5;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,15 +82,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- Avatar + Bio ---
-            Center(
-              child: ProfileAvatarSection(
-                imageUrl: 'https://i.pravatar.cc/300?img=11',
-                name: 'Alex Doe',
-                age: 22,
-                bio:
-                    'Aspiring software engineer and avid hiker. Looking for a clean and quiet place to live with like-minded individuals.',
+            if (_loadingProfile)
+              const Center(child: CircularProgressIndicator())
+            else
+              Center(
+                child: ProfileAvatarSection(
+                  imageUrl: _profile?.avatarUrl ?? "",
+                  name: _profile?.fullName ?? 'Your Name',
+                  bio: _profile != null
+                      ? 'Occupation: ${_profile!.occupation ?? 'N/A'}'
+                      : 'Complete your profile to personalize this section.',
+                ),
               ),
-            ),
             const SizedBox(height: 20),
 
             // --- Progress bar ---
@@ -51,17 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 20),
 
             // --- Interests ---
-            InterestsSection(
-              interests: const [
-                'Music',
-                'Sports',
-                'Gaming',
-                'Hiking',
-                'Cooking',
-                'Traveling',
-              ],
-              highlighted: const {'Music', 'Gaming', 'Hiking'},
-            ),
+            const InterestsSection(),
             const SizedBox(height: 24),
 
             // --- Preferences ---

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../models/location_model.dart';
-import '../location_marker.dart';
+import '../common/location_marker.dart';
 
 class MapWidget extends StatelessWidget {
   final List<LocationModel> locations;

@@ -5,14 +5,12 @@ class ProfileAvatarSection extends StatelessWidget {
     super.key,
     required this.imageUrl,
     required this.name,
-    required this.age,
     required this.bio,
     this.onEditAvatar,
   });
 
   final String imageUrl;
   final String name;
-  final int age;
   final String bio;
   final VoidCallback? onEditAvatar;
 
@@ -48,7 +46,7 @@ class ProfileAvatarSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          '$name, $age',
+          name,
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
