@@ -6,9 +6,6 @@ import 'package:host_me/widgets/profile_screen_widgets/profile_progress_bar.dart
 import 'package:host_me/widgets/profile_screen_widgets/interests_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/activity_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/preferences_section.dart';
-import 'home_screen.dart';
-import 'houses_screen.dart';
-import 'matches_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_service.dart';
 import '../models/profile_model.dart';

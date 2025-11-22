@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:host_me/screens/login_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
-import 'account_setup_screen.dart';
 import '../utils/notifications.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -120,7 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Show success message then navigate to account setup.
         await showAppSuccess(context, 'Account created! Please check your email to verify.');
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AccountSetupScreen()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       } else {
         _showError('Registration failed. Please try again.');
