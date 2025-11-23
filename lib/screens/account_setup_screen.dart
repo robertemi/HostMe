@@ -276,7 +276,7 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
                 SizedBox(
                   width: 160,
                   child: DropdownButtonFormField<String>(
-                    value: _countryCode,
+                    initialValue: _countryCode,
                     items: _countries
                         .map((c) => DropdownMenuItem(
                               value: c['code'],
