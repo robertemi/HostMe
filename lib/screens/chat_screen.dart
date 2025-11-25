@@ -46,13 +46,25 @@ class _ChatScreenState extends State<ChatScreen> {
         data.where((msg) =>
             (msg['sender_id'] == userId && msg['receiver_id'] == widget.receiverId) ||
             (msg['sender_id'] == widget.receiverId && msg['receiver_id'] == userId)).map(
-          (msg) => Message(
-            sender: msg['sender_id'],
-            text: msg['text'],
-            time: msg['created_at'],
-            isMe: msg['sender_id'] == userId,
-            avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
-          ),
+          (msg) {
+            final createdAt = msg['created_at'];
+            DateTime time;
+            if (createdAt is String) {
+              time = DateTime.tryParse(createdAt) ?? DateTime.now();
+            } else if (createdAt is DateTime) {
+              time = createdAt;
+            } else {
+              time = DateTime.now();
+            }
+
+            return Message(
+              sender: msg['sender_id'],
+              text: msg['text'],
+              time: time,
+              isMe: msg['sender_id'] == userId,
+              avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
+            );
+          },
         ),
       );
     });
@@ -73,16 +85,33 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages
           ..clear()
-          ..addAll(filtered.map((msg) => Message(
-                sender: msg['sender_id'],
-                text: msg['text'],
-                time: msg['created_at'],
-                isMe: msg['sender_id'] == userId,
-                avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
-              )));
+          ..addAll(filtered.map((msg) {
+            final createdAt = msg['created_at'];
+            DateTime time;
+            if (createdAt is String) {
+              time = DateTime.tryParse(createdAt) ?? DateTime.now();
+            } else if (createdAt is DateTime) {
+              time = createdAt;
+            } else {
+              time = DateTime.now();
+            }
+
+            return Message(
+              sender: msg['sender_id'],
+              text: msg['text'],
+              time: time,
+              isMe: msg['sender_id'] == userId,
+              avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
+            );
+          }
+          )
+          );
+        
       });
     });
   }
+  
+    
 
   void _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
@@ -153,4 +182,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
 }
+
+

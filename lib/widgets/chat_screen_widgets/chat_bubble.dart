@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../../models/message_model.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -65,7 +66,7 @@ class ChatBubble extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            message.time,
+            timeago.format(message.time),
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade600,
