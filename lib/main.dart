@@ -5,10 +5,8 @@ import 'theme.dart';
 import 'widgets/liquid_glass_background.dart';
 import 'package:host_me/screens/login_screen.dart';
 import 'package:host_me/screens/root_shell.dart';
-import 'package:host_me/screens/home_screen.dart';
 import 'package:host_me/screens/account_setup_screen.dart';
 import 'services/profile_service.dart';
-import 'config/supabase_config.dart';
 
 
 Future<void> main() async {

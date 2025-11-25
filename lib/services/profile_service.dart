@@ -20,6 +20,13 @@ class ProfileService {
   }
 
   Future<void> upsertProfile(ProfileModel profile) async {
-    await _client.from('profiles').upsert(profile.toMap());
+    // Request returning the inserted/updated row to verify success.
+    final response = await _client
+        .from('profiles')
+        .upsert(profile.toMap())
+        .select(); // Returns List<Map<String, dynamic>>
+    if (response.isEmpty) {
+      throw Exception('Profile upsert failed: empty response list');
+    }
   }
 }

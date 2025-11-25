@@ -51,11 +51,11 @@ class PreferencesSection extends StatelessWidget {
               value: budgetLevel,
               onChanged: onBudgetChanged,
               labels: const [
-                'Under \€100',
-                '\€100-\€300',
-                '\€300-\€500',
-                '\€500-\€1000',
-                'Over \€1000',
+                'Under €100',
+                '€100-€300',
+                '€300-€500',
+                '€500-€1000',
+                'Over €1000',
               ],
             ),
 

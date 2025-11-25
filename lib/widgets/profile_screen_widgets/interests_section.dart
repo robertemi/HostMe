@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 //TODO : Make the inerests section responsive (no more pixel overflow )
+//TODO : Add a x button in the chips to remove an interest
 class InterestsSection extends StatefulWidget {
   const InterestsSection({super.key, this.initialInterests = const []});
 
@@ -48,8 +49,6 @@ class _InterestsSectionState extends State<InterestsSection> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      spacing: 4,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Interests',
@@ -60,35 +59,43 @@ class _InterestsSectionState extends State<InterestsSection> {
           ),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final interest in _interests)
-              _InterestChip(label: interest),
-            GestureDetector(
-              onTap: _addInterest,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                height: 32,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white54, style: BorderStyle.solid),
+
+        const SizedBox(width: 16),
+        // Interests chips and add button
+        Expanded(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final interest in _interests)
+                _InterestChip(
+                  label: interest,
+                  onRemove: () => setState(() => _interests.remove(interest)),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.add, size: 18, color: Colors.white70),
-                    SizedBox(width: 4),
-                    Text(
-                      'Add',
-                      style: TextStyle( color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
-                  ],
+              GestureDetector(
+                onTap: _addInterest,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  height: 32,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: Colors.white54, style: BorderStyle.solid),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.add, size: 18, color: Colors.white70),
+                      SizedBox(width: 4),
+                      Text(
+                        'Add',
+                        style: TextStyle( color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -96,28 +103,42 @@ class _InterestsSectionState extends State<InterestsSection> {
 }
 
 class _InterestChip extends StatelessWidget {
-  const _InterestChip({required this.label});
+  const _InterestChip({required this.label, required this.onRemove});
 
   final String label;
+  final VoidCallback onRemove;
 // Chip UI for an interest in the interests section
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).primaryColor;
+
     return Container(
-      height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: primary.withOpacity(0.45),
         borderRadius: BorderRadius.circular(999),
       ),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onPrimary,
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(
+              Icons.close,
+              size: 16,
+              color: Colors.white70,
+            ),
+          ),
+        ],
       ),
     );
   }

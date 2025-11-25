@@ -6,9 +6,14 @@ import '../utils/notifications.dart';
 import '../models/profile_model.dart';
 import 'root_shell.dart';
 import '../widgets/common/labeled_slider.dart';
+import 'login_screen.dart';
 
 class AccountSetupScreen extends StatefulWidget {
-  const AccountSetupScreen({super.key});
+  const AccountSetupScreen({super.key, this.initialUser});
+
+  // When navigating immediately after signUp, pass the returned user to avoid
+  // a brief window where Supabase.currentSession/currentUser may be null on web.
+  final User? initialUser;
 
   @override
   State<AccountSetupScreen> createState() => _AccountSetupScreenState();
@@ -72,6 +77,37 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     _budgetMaxCtrl.addListener(_onFieldChanged);
     _avatarUrlCtrl.addListener(_onFieldChanged);
     _universityCtrl.addListener(_onFieldChanged);
+    // If profile already exists (e.g. user refreshed mid-setup), skip setup.
+    _checkExistingProfile();
+  }
+  Future<void> _checkExistingProfile() async {
+    final user = Supabase.instance.client.auth.currentUser ?? widget.initialUser;
+    if (user == null) return; // cannot check yet
+    try {
+      final exists = await _profileService.isProfileComplete(user.id);
+      if (exists && mounted) {
+        // ignore: avoid_print
+        print('[AccountSetup] profile already exists; redirecting to RootShell');
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const RootShell()),
+        );
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('[AccountSetup] profile check error: $e');
+    }
+  }
+
+  // Attempt to ensure we have an auth user. Tries immediate sources, then polls briefly.
+  Future<User?> _ensureAuthUser() async {
+    User? user = Supabase.instance.client.auth.currentUser ?? widget.initialUser;
+    if (user != null) return user;
+    // Poll for a short time (e.g., after signUp before session hydration on web)
+    for (int i = 0; i < 5 && user == null; i++) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      user = Supabase.instance.client.auth.currentUser;
+    }
+    return user ?? Supabase.instance.client.auth.currentSession?.user;
   }
 
   void _onFieldChanged() {
@@ -109,9 +145,24 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    // Validate currently visible fields
+    if (!_formKey.currentState!.validate()) {
+      // ignore: avoid_print
+      print('[AccountSetup] form validation failed at step=$_step');
+      return;
+    }
+    final user = await _ensureAuthUser();
+    if (user == null) {
+      // ignore: avoid_print
+      print('[AccountSetup] no auth user available (session/currentUser both null)');
+      await showAppError(context, 'Session lost. Please login again.', actionLabel: 'Login', onAction: () {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (r) => false,
+        );
+      });
+      return;
+    }
     setState(() => _submitting = true);
     try {
       final profile = ProfileModel(
@@ -132,6 +183,8 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
         cleanlinessLevel: _cleanliness.round(),
         noiseLevel: _noise.round(),
         dateOfBirth: _dob,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
       await _profileService.upsertProfile(profile);
       if (!mounted) return;
@@ -141,9 +194,8 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       // ignore: avoid_print
       print('[AccountSetup] profile upsert succeeded for user=${profile.id}');
 
-      Navigator.of(context).pushAndRemoveUntil(
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const RootShell()),
-        (route) => false,
       );
     } catch (e) {
       // ignore: avoid_print
@@ -224,7 +276,7 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
                 SizedBox(
                   width: 160,
                   child: DropdownButtonFormField<String>(
-                    value: _countryCode,
+                    initialValue: _countryCode,
                     items: _countries
                         .map((c) => DropdownMenuItem(
                               value: c['code'],
@@ -487,7 +539,13 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
                       )
                     else
                       ElevatedButton(
-                        onPressed: _canProceedCurrentStep() && !_submitting ? _submit : null,
+                        onPressed: _canProceedCurrentStep() && !_submitting
+                            ? () {
+                                // ignore: avoid_print
+                                print('[AccountSetup] Finish pressed step=$_step');
+                                _submit();
+                              }
+                            : null,
                         child: _submitting
                             ? const SizedBox(
                                 width: 18,
