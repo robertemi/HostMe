@@ -7,6 +7,28 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
 
+
+String formatTimeAgo(DateTime time) {
+  final diff = DateTime.now().difference(time);
+
+  if (diff.inSeconds < 60) return "just now";
+  if (diff.inMinutes < 60) return "${diff.inMinutes}m ago";
+  if (diff.inHours < 24) return "${diff.inHours}h ago";
+  return "${diff.inDays}d ago";
+}
+
+
+DateTime _parseTime(dynamic createdAt) {
+  if (createdAt is String) {
+    return DateTime.tryParse(createdAt) ?? DateTime.now();
+  } else if (createdAt is DateTime) {
+    return createdAt;
+  } else {
+    return DateTime.now();
+  }
+}
+
+
 Future<List<MatchModel>> fetchMatches() async {
   final userId = supabase.auth.currentUser?.id;
   if (userId == null) return [];
@@ -28,7 +50,7 @@ Future<List<MatchModel>> fetchMatches() async {
       name: otherUser['full_name'] ?? 'Unknown',
       avatarUrl: otherUser['avatar_url'] ?? 'https://i.pravatar.cc/150',
       message: '', // can fill from latest chat message later
-      timeAgo: match['created_at'],
+      timeAgo: formatTimeAgo(_parseTime(match['created_at'])),
       isOnline: otherUser['is_online'] ?? false,
     );
   }).toList();
