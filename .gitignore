@@ -43,9 +43,14 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+.vscode/
 android/
 macos/
 linux/
 web/
 windows/
 ios/
+package-lock.json
+package.json
+node_modules/
+.vscode/mcp.json
