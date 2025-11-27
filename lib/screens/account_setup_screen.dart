@@ -7,6 +7,8 @@ import '../models/profile_model.dart';
 import 'root_shell.dart';
 import '../widgets/common/labeled_slider.dart';
 import 'login_screen.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 class AccountSetupScreen extends StatefulWidget {
   const AccountSetupScreen({super.key, this.initialUser});
@@ -22,6 +24,43 @@ class AccountSetupScreen extends StatefulWidget {
 class _AccountSetupScreenState extends State<AccountSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final ProfileService _profileService = ProfileService();
+
+
+  // persists user avatars to supabase bucket
+  Future<String?> _uploadAvatar(User user, XFile file) async {
+  print("UPLOAD STARTED");
+
+  final supabase = Supabase.instance.client;
+
+  final fileBytes = await file.readAsBytes();
+  final fileExt = file.name.split('.').last;
+  final filePath = '${user.id}/avatar.$fileExt';
+
+  print("READ BYTES OK, uploading to: $filePath");
+
+  try {
+    final uploadedPath = await supabase.storage
+        .from('UserPhotos')
+        .uploadBinary(
+          filePath,
+          fileBytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+
+    print("UPLOAD FINISHED, PATH = $uploadedPath");
+
+    final publicUrl =
+        supabase.storage.from('UserPhotos').getPublicUrl(filePath);
+
+    print("PUBLIC URL = $publicUrl");
+
+    return publicUrl;
+  } catch (e) {
+    print("UPLOAD FAILED: $e");
+    rethrow;
+  }
+}
+
 
   // Step management
   int _step = 0;
@@ -212,30 +251,53 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     switch (_step) {
       case 0:
         return _centeredStep(
-          title: "Let's add a profile picture",
+          title: "Add a profile picture",
           child: Column(
-            children: [
-              CircleAvatar(
+          children: [
+            GestureDetector(
+              onTap: () async {
+                final picker = ImagePicker();
+                final picked = await picker.pickImage(source: ImageSource.gallery);
+
+                if (picked != null) {
+                  setState(() {
+                    _avatarUrlCtrl.text = 'uploading...';
+                  });
+
+                  final user = await _ensureAuthUser();
+                  if (user != null) {
+                    final uploadedUrl = await _uploadAvatar(user, picked);
+
+                    setState(() {
+                      _avatarUrlCtrl.text = uploadedUrl ?? '';
+                    });
+                  }
+                }
+              },
+              child: CircleAvatar(
                 radius: 48,
-                backgroundImage: (_avatarUrlCtrl.text.trim().isNotEmpty)
+                backgroundImage: _avatarUrlCtrl.text.trim().isNotEmpty &&
+                        !_avatarUrlCtrl.text.startsWith("uploading")
                     ? NetworkImage(_avatarUrlCtrl.text.trim())
                     : null,
-                child: _avatarUrlCtrl.text.trim().isEmpty
+                child: _avatarUrlCtrl.text.trim().isEmpty ||
+                        _avatarUrlCtrl.text.startsWith("uploading")
                     ? const Icon(Icons.person, size: 48)
                     : null,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _avatarUrlCtrl,
-                textAlign: TextAlign.center,
-                decoration: const InputDecoration(
-                  hintText: 'Paste an image URL',
-                ),
-                onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            const Text("Tap the avatar to upload a photo"),
+            TextFormField(
+              controller: _avatarUrlCtrl,
+              textAlign: TextAlign.center,
+              decoration: const InputDecoration(
+                hintText: 'Paste an image URL (optional)',
               ),
-            ],
-          ),
-        );
+            ),
+          ],
+        ),
+      );
       case 1:
         return _centeredStep(
           title: "What's your full name?",
