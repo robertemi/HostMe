@@ -3,11 +3,18 @@ import 'package:flutter/material.dart';
 import '../widgets/roommate_finder_widgets/simple_top_bar.dart';
 import '../widgets/roommate_finder_widgets/roommate_profile_card.dart';
 import '../widgets/roommate_finder_widgets/roommate_action_bar.dart';
+import '../widgets/roommate_finder_widgets/swipeable_card.dart';
 import '../services/matching_service.dart';
 import '../models/match_result.dart';
 
 class RoommateFinderScreen extends StatefulWidget {
-  const RoommateFinderScreen({super.key});
+  /// The search mode: 'find_place' (user looking for a room) or 'find_roommate' (host looking for a roommate).
+  final String searchMode;
+
+  const RoommateFinderScreen({
+    super.key,
+    required this.searchMode,
+  });
 
   @override
   State<RoommateFinderScreen> createState() => _RoommateFinderScreenState();
@@ -15,6 +22,7 @@ class RoommateFinderScreen extends StatefulWidget {
 
 class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
   final MatchingService _matchingService = MatchingService();
+
   List<MatchResult> _matches = [];
   bool _isLoading = true;
   String? _error;
@@ -26,8 +34,14 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
   }
 
   Future<void> _loadMatches() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
-      final matches = await _matchingService.getSmartMatches();
+      final matches = await _matchingService.getSmartMatches(widget.searchMode);
       if (mounted) {
         setState(() {
           _matches = matches;
@@ -110,8 +124,19 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
     // In a real app, you'd use a Swiper controller to iterate through _matches.
     final topMatch = _matches.first;
 
-    // Determine image to show: House image (if available) or User Avatar
-    final displayImage = topMatch.houseImage ?? topMatch.avatarUrl;
+    // Determine what image to show based on mode
+    final String? displayImage;
+    final String? hostAvatar;
+    
+    if (widget.searchMode == 'find_place') {
+      // Show house image as main, host avatar as bubble
+      displayImage = topMatch.houseImage ?? topMatch.avatarUrl;
+      hostAvatar = topMatch.avatarUrl;
+    } else {
+      // Show person's avatar as main (no host bubble for seekers)
+      displayImage = topMatch.avatarUrl;
+      hostAvatar = null;
+    }
     
     // Build tags list from profile data
     final tags = <String>[];
@@ -160,40 +185,23 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
                           ),
                         ),
                       ),
-                      // The Swipeable Profile Card
-                      Dismissible(
+                      // The Swipeable Profile Card with 45° tilt
+                      SwipeableCard(
                         key: ValueKey(topMatch.userId),
-                        direction: DismissDirection.horizontal,
-                        onDismissed: (direction) {
-                          final isLike = direction == DismissDirection.startToEnd;
-                          _handleSwipe(topMatch, isLike);
-                        },
-                        background: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.only(left: 32),
-                          child: const Icon(Icons.favorite, color: Colors.white, size: 48),
-                        ),
-                        secondaryBackground: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 32),
-                          child: const Icon(Icons.close, color: Colors.white, size: 48),
-                        ),
+                        onSwipeRight: () => _handleSwipe(topMatch, true),
+                        onSwipeLeft: () => _handleSwipe(topMatch, false),
+                        maxRotation: 30.0, // 30 degrees max tilt (45 is too extreme)
                         child: RoommateProfileCard(
                           name: topMatch.fullName ?? 'Unknown',
                           age: topMatch.age ?? 0,
                           bio: topMatch.bio ?? 'No bio available.',
                           tags: tags,
-                          imageUrl: displayImage, // Use URL from DB
+                          imageUrl: displayImage,
                           matchScore: topMatch.matchScore,
                           rentPrice: topMatch.houseRent,
+                          houseAddress: topMatch.houseAddress,
+                          hostAvatarUrl: hostAvatar,
+                          searchMode: widget.searchMode,
                         ),
                       ),
                     ],

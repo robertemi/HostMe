@@ -12,6 +12,9 @@ class RoommateProfileCard extends StatelessWidget {
     this.imageUrl,
     required this.matchScore,
     this.rentPrice,
+    this.houseAddress,
+    this.hostAvatarUrl,
+    this.searchMode = 'find_roommate',
   });
 
   final String name;
@@ -22,6 +25,10 @@ class RoommateProfileCard extends StatelessWidget {
   final String? imageUrl;
   final int matchScore;
   final double? rentPrice;
+  final String? houseAddress;
+  final String? hostAvatarUrl;
+  /// 'find_place' shows house with host bubble, 'find_roommate' shows person
+  final String searchMode;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +101,32 @@ class RoommateProfileCard extends StatelessWidget {
             ),
           ),
 
+          // Host Avatar Bubble (Top Left) - Only in find_place mode
+          if (searchMode == 'find_place' && hostAvatarUrl != null)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: GestureDetector(
+                onTap: () {
+                  // TODO: Show host profile details
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3))
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundImage: NetworkImage(hostAvatarUrl!),
+                    backgroundColor: Colors.grey[300],
+                  ),
+                ),
+              ),
+            ),
+
           // Content (Bottom)
           Padding(
             padding: const EdgeInsets.all(16),
@@ -101,48 +134,83 @@ class RoommateProfileCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '$name, $age',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
+                // Different display based on search mode
+                if (searchMode == 'find_place') ...[
+                  // FIND PLACE MODE: Show house info prominently
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (rentPrice != null)
+                              Text(
+                                '€${rentPrice!.toStringAsFixed(0)}/mo',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            if (houseAddress != null)
+                              Text(
+                                houseAddress!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                    ),
-                    if (rentPrice != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white54),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Host info
+                  Row(
+                    children: [
+                      const Icon(Icons.person, color: Colors.white70, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Hosted by $name, $age',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  // FIND ROOMMATE MODE: Show person info prominently
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
                         child: Text(
-                          '\$${rentPrice!.toStringAsFixed(0)}/mo',
-                          style: const TextStyle(
+                          '$name, $age',
+                          style: theme.textTheme.headlineSmall?.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  bio,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    bio,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,

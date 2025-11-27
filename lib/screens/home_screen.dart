@@ -21,20 +21,76 @@ class _HomeScreenState extends State<HomeScreen> {
   final authService = AuthService();
   int selectedChoice = 0; // 0 = Find a Roommate, 1 = Find a Place
 
-  void _onSearch() {
+  Future<void> _onSearch() async {
     if (selectedChoice == 1) {
-      // 🏠 “Find a Place” → go to HousesScreen
+      // 🏠 "Find a Place" → user is looking for a room/house
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const HousesScreen()),
+        MaterialPageRoute(
+          builder: (_) => const RoommateFinderScreen(searchMode: 'find_place'),
+        ),
       );
     } else {
-      // 👥 “Find a Roommate” → RoommateFinderScreen (or placeholder)
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const RoommateFinderScreen()),
-      );
+      // 👥 "Find a Roommate" → user is a host looking for a roommate
+      // First, check if the user has a house registered
+      try {
+        final profile = await authService.getUserProfile();
+        final hasHouse = profile != null && profile['house_id'] != null;
+        
+        if (!hasHouse) {
+          if (!mounted) return;
+          _showNoHouseDialog();
+          return;
+        }
+        
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RoommateFinderScreen(searchMode: 'find_roommate'),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error checking profile: $e')),
+        );
+      }
     }
+  }
+
+  void _showNoHouseDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          icon: Icon(
+            Icons.home_work_outlined,
+            size: 48,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text('No Property Listed'),
+          content: const Text(
+            'To find a roommate, you need to list your property first. '
+            'Add your house or apartment so potential roommates can see where they\'d be living!',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _onListProperty();
+              },
+              icon: const Icon(Icons.add_home),
+              label: const Text('List Property'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _onListProperty() {
