@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddHouseScreen extends StatefulWidget {
   const AddHouseScreen({super.key});
@@ -26,143 +27,266 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   final areaController = TextEditingController();
   final floorController = TextEditingController();
   final typeController = TextEditingController();
-  final imageController = TextEditingController();
 
   bool hasElevator = false;
   bool hasPersonalHeating = false;
 
-  // For image handling
-  File? _selectedImageFile;       // mobile
-  Uint8List? _webImageBytes;      // web
+  // MULTI IMAGE STORAGE (local until save)
+  List<File> mobileImages = [];
+  List<Uint8List> webImages = [];
+  List<String> webImageNames = [];
+
+  static const int maxPhotos = 5;
+
+  // Consent keys & cached values
+  static const String _kCameraConsentKey = 'consent_camera';
+  static const String _kGalleryConsentKey = 'consent_gallery';
+  bool _cameraConsent = false;
+  bool _galleryConsent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConsents();
+  }
+
+  Future<void> _loadConsents() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _cameraConsent = prefs.getBool(_kCameraConsentKey) ?? false;
+      _galleryConsent = prefs.getBool(_kGalleryConsentKey) ?? false;
+    });
+  }
+
+  Future<void> _saveConsent(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+    if (key == _kCameraConsentKey) _cameraConsent = value;
+    if (key == _kGalleryConsentKey) _galleryConsent = value;
+  }
 
   // ------------------------------
-  // IMAGE PICKER (WEB + MOBILE)
+  // PICK IMAGE (1 AT A TIME) -- NO UPLOAD HERE
   // ------------------------------
   Future<void> _pickImage(ImageSource source) async {
+    final currentCount = kIsWeb ? webImages.length : mobileImages.length;
+    if (currentCount >= maxPhotos) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You can upload max 5 photos.")),
+      );
+      return;
+    }
+
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: source, imageQuality: 80);
 
     if (picked == null) return;
 
     if (kIsWeb) {
-      // ---- WEB ----
       final bytes = await picked.readAsBytes();
       setState(() {
-        _webImageBytes = bytes;
-        _selectedImageFile = null;
+        webImages.add(bytes);
+        webImageNames.add(picked.name);
       });
-      await _uploadToSupabaseWeb(bytes, picked.name);
-
     } else {
-      // ---- MOBILE ----
       final file = File(picked.path);
-      setState(() {
-        _selectedImageFile = file;
-        _webImageBytes = null;
-      });
-      await _uploadToSupabaseMobile(file);
+      setState(() => mobileImages.add(file));
     }
   }
 
   // ------------------------------
-  // UPLOAD WEB
+  // Ask for user consent before opening camera/gallery
+  // remembers choice if requested
   // ------------------------------
-  Future<void> _uploadToSupabaseWeb(Uint8List bytes, String filename) async {
-    try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+  Future<bool> _confirmMediaAccess(BuildContext ctx, String target) async {
+    // Check cached stored consent first
+    if (target == 'camera' && _cameraConsent) return true;
+    if (target == 'gallery' && _galleryConsent) return true;
 
-      final ext = filename.split('.').last;
-      final fileName = "house_${DateTime.now().millisecondsSinceEpoch}.$ext";
-      final filePath = "${user.id}/$fileName";
+    bool remember = false;
+    final result = await showDialog<bool>(
+      context: ctx,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setStateSB) {
+          return AlertDialog(
+            title: const Text('Permission required'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Allow the app to access your $target to pick a photo?'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: remember,
+                      onChanged: (v) => setStateSB(() => remember = v ?? false),
+                    ),
+                    const Expanded(child: Text('Remember my choice')),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Allow'),
+              ),
+            ],
+          );
+        });
+      },
+    );
 
+    final allowed = result ?? false;
+    if (remember && allowed) {
+      final key = target == 'camera' ? _kCameraConsentKey : _kGalleryConsentKey;
+      await _saveConsent(key, true);
+    } else if (remember && !allowed) {
+      final key = target == 'camera' ? _kCameraConsentKey : _kGalleryConsentKey;
+      await _saveConsent(key, false);
+    }
+    return allowed;
+  }
+
+  // ------------------------------
+  // UPLOAD HELPER (used only during save)
+  // ------------------------------
+  Future<String> _uploadSingleImage({
+    File? file,
+    Uint8List? bytes,
+    String? name,
+  }) async {
+    final user = supabase.auth.currentUser!;
+    final ext = (name != null && name.contains('.'))
+        ? name.split('.').last
+        : (file != null ? file.path.split('.').last : 'jpg');
+    final filePath =
+        "${user.id}/house_${DateTime.now().millisecondsSinceEpoch}_${UniqueKey().hashCode}.$ext";
+
+    if (kIsWeb) {
       await supabase.storage.from('HousePhotos').uploadBinary(
-        filePath,
-        bytes,
-        fileOptions: const FileOptions(upsert: true),
-      );
-
-      final publicUrl =
-          supabase.storage.from('HousePhotos').getPublicUrl(filePath);
-
-      setState(() => imageController.text = publicUrl);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Image uploaded successfully (Web)")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Upload failed: $e")));
-    }
-  }
-
-  // ------------------------------
-  // UPLOAD MOBILE
-  // ------------------------------
-  Future<void> _uploadToSupabaseMobile(File file) async {
-    try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
-
-      final ext = file.path.split('.').last;
-      final fileName = "house_${DateTime.now().millisecondsSinceEpoch}.$ext";
-      final filePath = "${user.id}/$fileName";
-
+            filePath,
+            bytes!,
+            fileOptions: const FileOptions(upsert: true),
+          );
+    } else {
       await supabase.storage.from('HousePhotos').upload(
-        filePath,
-        file,
-        fileOptions: const FileOptions(upsert: true),
-      );
-
-      final publicUrl =
-          supabase.storage.from('HousePhotos').getPublicUrl(filePath);
-
-      setState(() => imageController.text = publicUrl);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Image uploaded successfully (Mobile)")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Upload failed: $e")));
+            filePath,
+            file!,
+            fileOptions: const FileOptions(upsert: true),
+          );
     }
+
+    // getPublicUrl returns a String (public url)
+    final url = supabase.storage.from('HousePhotos').getPublicUrl(filePath);
+    return url;
   }
 
   // ------------------------------
-  // SAVE HOUSE INFO
+  // SAVE LISTING (uploads images now)
   // ------------------------------
   Future<void> _saveHouse() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final totalLocalImages = kIsWeb ? webImages.length : mobileImages.length;
+    if (totalLocalImages == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please add at least one photo.")),
+      );
+      return;
+    }
+
     try {
       final user = supabase.auth.currentUser;
-
-      await supabase.from('houses').insert({
-        'address': addressController.text,
-        'number_of_rooms': int.tryParse(roomsController.text),
-        'number_of_balconies': int.tryParse(balconiesController.text),
-        'number_of_bedrooms': int.tryParse(bedroomsController.text),
-        'number_of_bathrooms': int.tryParse(bathroomsController.text),
-        'rent': double.tryParse(rentController.text),
-        'living_area': double.tryParse(areaController.text),
-        'floor_number': int.tryParse(floorController.text),
-        'type': typeController.text,
-        'has_elevator': hasElevator,
-        'has_personal_heating': hasPersonalHeating,
-        'image': imageController.text.isNotEmpty ? imageController.text : null,
-        'number_of_current_roomates': 0,
-        if (user != null) 'user_id': user.id,
-      });
-
-      if (mounted) {
+      if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Property added successfully!')),
+          const SnackBar(content: Text("You must be signed in to create a listing.")),
         );
-        Navigator.pop(context);
+        return;
+      }
+
+      debugPrint('DEBUG: currentUser = ${user.id}');
+      debugPrint('DEBUG: currentUser.email = ${user.email}');
+
+      // On web, refresh session to ensure auth.uid() is available in RLS
+      if (kIsWeb) {
+        await supabase.auth.refreshSession();
+        debugPrint('DEBUG: Session refreshed on web');
+      }
+
+      // Upload local images and collect URLs
+      final List<String> imageUrls = [];
+      for (var i = 0; i < totalLocalImages; i++) {
+        if (kIsWeb) {
+          final bytes = webImages[i];
+          final name = webImageNames.length > i ? webImageNames[i] : 'house_$i.jpg';
+          final url = await _uploadSingleImage(bytes: bytes, name: name);
+          imageUrls.add(url);
+        } else {
+          final file = mobileImages[i];
+          final url = await _uploadSingleImage(file: file);
+          imageUrls.add(url);
+        }
+      }
+
+      debugPrint('DEBUG: About to insert house with user_id = ${user.id}');
+      debugPrint('DEBUG: Images to insert: ${imageUrls.length} URLs');
+
+      // Insert house and return id
+      final insertResp = await supabase
+          .from('houses')
+          .insert({
+            'user_id': user.id,
+            'address': addressController.text,
+            'number_of_rooms': int.tryParse(roomsController.text),
+            'number_of_balconies': int.tryParse(balconiesController.text),
+            'number_of_bedrooms': int.tryParse(bedroomsController.text),
+            'number_of_bathrooms': int.tryParse(bathroomsController.text),
+            'rent': double.tryParse(rentController.text),
+            'living_area': double.tryParse(areaController.text),
+            'floor_number': int.tryParse(floorController.text),
+            'type': typeController.text,
+            'has_elevator': hasElevator,
+            'has_personal_heating': hasPersonalHeating,
+            'image': imageUrls,
+            'number_of_current_roomates': 0,
+          })
+          .select('id')
+          .single();
+
+      debugPrint('DEBUG: Insert response = $insertResp');
+
+      // Extract new house id robustly
+      dynamic newHouseId;
+      if (insertResp is Map && insertResp.containsKey('id')) {
+        newHouseId = insertResp['id'];
+      } else if (insertResp is Map && insertResp['data'] != null && insertResp['data'] is Map && insertResp['data'].containsKey('id')) {
+        newHouseId = insertResp['data']['id'];
+      } else if (insertResp is List && insertResp.isNotEmpty && insertResp[0] is Map && insertResp[0].containsKey('id')) {
+        newHouseId = insertResp[0]['id'];
+      }
+
+      // Update profile to save house id
+      if (newHouseId != null) {
+        await supabase.from('profiles').update({'house_id': newHouseId}).eq('id', user.id);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Property added successfully!")),
+      );
+
+      // Redirect to home screen
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     } catch (e) {
+      debugPrint('DEBUG: Error caught = $e');
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error saving property: $e")));
+          .showSnackBar(SnackBar(content: Text("Error saving: $e")));
     }
   }
 
@@ -171,6 +295,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   // ------------------------------
   @override
   Widget build(BuildContext context) {
+    final currentCount = kIsWeb ? webImages.length : mobileImages.length;
     return Scaffold(
       appBar: AppBar(title: const Text('List Your Property')),
       body: SingleChildScrollView(
@@ -180,52 +305,44 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
           child: Column(
             children: [
               _buildTextField(addressController, "Address"),
-              _buildTextField(roomsController, "Number of Rooms",
-                  keyboardType: TextInputType.number),
-              _buildTextField(balconiesController, "Number of Balconies",
-                  keyboardType: TextInputType.number),
-              _buildTextField(bedroomsController, "Number of Bedrooms",
-                  keyboardType: TextInputType.number),
-              _buildTextField(bathroomsController, "Number of Bathrooms",
-                  keyboardType: TextInputType.number),
-              _buildTextField(rentController, "Rent",
-                  keyboardType: TextInputType.number),
-              _buildTextField(areaController, "Living Area (m²)",
-                  keyboardType: TextInputType.number),
-              _buildTextField(floorController, "Floor Number",
-                  keyboardType: TextInputType.number),
+              _buildNumField(roomsController, "Number of Rooms"),
+              _buildNumField(balconiesController, "Number of Balconies"),
+              _buildNumField(bedroomsController, "Number of Bedrooms"),
+              _buildNumField(bathroomsController, "Number of Bathrooms"),
+              _buildNumField(rentController, "Rent"),
+              _buildNumField(areaController, "Living Area (m²)"),
+              _buildNumField(floorController, "Floor Number"),
               _buildTextField(typeController, "Type"),
 
               const SizedBox(height: 20),
 
-              // IMAGE PREVIEW
-              if (_webImageBytes != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.memory(_webImageBytes!,
-                      height: 180, fit: BoxFit.cover),
-                )
-              else if (_selectedImageFile != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.file(_selectedImageFile!,
-                      height: 180, fit: BoxFit.cover),
-                ),
+              // MULTI IMAGE GRID
+              _buildImageGrid(),
 
               const SizedBox(height: 12),
 
-              // CAMERA + GALLERY BUTTONS
+              // PICKERS
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
+                    onPressed: currentCount < maxPhotos
+                        ? () async {
+                            final ok = await _confirmMediaAccess(context, 'camera');
+                            if (ok) await _pickImage(ImageSource.camera);
+                          }
+                        : null,
                     icon: const Icon(Icons.camera_alt),
                     label: const Text("Camera"),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
+                    onPressed: currentCount < maxPhotos
+                        ? () async {
+                            final ok = await _confirmMediaAccess(context, 'gallery');
+                            if (ok) await _pickImage(ImageSource.gallery);
+                          }
+                        : null,
                     icon: const Icon(Icons.photo),
                     label: const Text("Gallery"),
                   ),
@@ -235,14 +352,14 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
               const SizedBox(height: 20),
 
               SwitchListTile(
-                title: const Text('Has Elevator'),
                 value: hasElevator,
                 onChanged: (val) => setState(() => hasElevator = val),
+                title: const Text("Has Elevator"),
               ),
               SwitchListTile(
-                title: const Text('Has Personal Heating'),
                 value: hasPersonalHeating,
                 onChanged: (val) => setState(() => hasPersonalHeating = val),
+                title: const Text("Has Personal Heating"),
               ),
 
               const SizedBox(height: 20),
@@ -258,24 +375,168 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {TextInputType keyboardType = TextInputType.text}) {
+  // ------------------------------
+  // IMAGE GRID (show local previews, allow delete)
+  // ------------------------------
+  Widget _buildImageGrid() {
+    final int count = kIsWeb ? webImages.length : mobileImages.length;
+    if (count == 0) {
+      return SizedBox(
+        height: 120,
+        child: Center(child: Text('No photos yet (add up to $maxPhotos)')),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: count,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 1, // force square tiles so image always fills the area
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemBuilder: (_, index) {
+        final Widget imageWidget = kIsWeb
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  color: Colors.grey[200],
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Image.memory(
+                    webImages[index],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  color: Colors.grey[200],
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Image.file(
+                    mobileImages[index],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+              );
+
+        return _HoverDeleteImage(
+          image: imageWidget,
+          onDelete: () {
+            setState(() {
+              if (kIsWeb) {
+                if (webImages.length > index) {
+                  webImages.removeAt(index);
+                  if (webImageNames.length > index) webImageNames.removeAt(index);
+                }
+              } else {
+                if (mobileImages.length > index) mobileImages.removeAt(index);
+              }
+            });
+          },
+        );
+      },
+    );
+  }
+
+  // ------------------------------
+  // INPUT HELPERS
+  // ------------------------------
+  Widget _buildTextField(TextEditingController c, String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        validator: (value) {
-          if ((value == null || value.isEmpty) &&
-              controller != imageController) {
-            return 'Please enter $label';
-          }
-          return null;
-        },
+        controller: c,
+        decoration: _decor(label),
+        validator: (v) => v == null || v.isEmpty ? "Required" : null,
+      ),
+    );
+  }
+
+  Widget _buildNumField(TextEditingController c, String label) =>
+      _buildTextField(c, label);
+
+  InputDecoration _decor(String label) => InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      );
+
+  @override
+  void dispose() {
+    addressController.dispose();
+    roomsController.dispose();
+    balconiesController.dispose();
+    bedroomsController.dispose();
+    bathroomsController.dispose();
+    rentController.dispose();
+    areaController.dispose();
+    floorController.dispose();
+    typeController.dispose();
+    super.dispose();
+  }
+}
+
+class _HoverDeleteImage extends StatefulWidget {
+  final Widget image;
+  final VoidCallback onDelete;
+
+  const _HoverDeleteImage({
+    required this.image,
+    required this.onDelete,
+    super.key,
+  });
+
+  @override
+  State<_HoverDeleteImage> createState() => _HoverDeleteImageState();
+}
+
+class _HoverDeleteImageState extends State<_HoverDeleteImage> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: widget.image,
+          ),
+
+          // Show X on hover (desktop/web) OR always show on mobile
+          if (_hovering || !kIsWeb)
+            Positioned(
+              top: 4,
+              right: 4,
+              child: GestureDetector(
+                onTap: widget.onDelete,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
