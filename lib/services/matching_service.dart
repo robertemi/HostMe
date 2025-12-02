@@ -5,10 +5,14 @@ class MatchingService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Calls the 'get_smart_matches' RPC function in Supabase.
+  /// [searchMode] should be 'find_place' (looking for a room) or 'find_roommate' (hosting, looking for a roommate).
   /// Returns a list of compatible users/houses sorted by match score.
-  Future<List<MatchResult>> getSmartMatches() async {
+  Future<List<MatchResult>> getSmartMatches(String searchMode) async {
     try {
-      final List<dynamic> response = await _supabase.rpc('get_smart_matches');
+      final List<dynamic> response = await _supabase.rpc(
+        'get_smart_matches',
+        params: {'search_mode': searchMode},
+      );
       
       // Map the raw JSON response to our model
       final matches = response
