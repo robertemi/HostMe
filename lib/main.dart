@@ -6,10 +6,13 @@ import 'widgets/liquid_glass_background.dart';
 import 'package:host_me/screens/login_screen.dart';
 import 'package:host_me/screens/root_shell.dart';
 import 'package:host_me/screens/account_setup_screen.dart';
+import 'package:host_me/screens/reset_password_screen.dart';
 import 'services/profile_service.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 
 Future<void> main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
   
   await Supabase.initialize(
@@ -29,7 +32,11 @@ class MyApp extends StatelessWidget {
       title: 'HostMe',
       theme: AppTheme.glassTheme,
       builder: (context, child) => LiquidGlassBackground(child: child),
-      home: const InitialRouter(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const InitialRouter(),
+        '/reset-password': (context) => const ResetPasswordScreen(),
+      },
     );
   }
 }
@@ -42,19 +49,32 @@ class InitialRouter extends StatefulWidget {
 }
 
 class _InitialRouterState extends State<InitialRouter> {
+  
   Future<Widget> _resolve() async {
-    final session = Supabase.instance.client.auth.currentSession;
+  debugPrint("ROUTER: Uri.base = ${Uri.base}");
+  debugPrint("ROUTER: path = ${Uri.base.path}");
+  debugPrint("ROUTER: fragment = ${Uri.base.fragment}");
+  final session = Supabase.instance.client.auth.currentSession;
 
-    // If there's no session, show the login screen.
-    if (session == null) return const LoginScreen();
+  // If the URL contains the reset-password route, show that screen so
+  // the reset flow can attempt to restore the recovery session and let
+  // the user enter a new password.
+  final uri = Uri.base;
+  final hasResetPath =
+      uri.path.contains('/reset-password') || uri.fragment.contains('reset-password');
 
-    // If the user is signed in, ensure their profile is complete. If it is,
-    // show the RootShell (persistent shell with bottom navigation). Otherwise
-    // send them through account setup.
-    final userId = session.user.id;
-    final complete = await ProfileService().isProfileComplete(userId);
-    return complete ? const RootShell() : const AccountSetupScreen();
+  if (session == null) {
+    if (hasResetPath) {
+      return const ResetPasswordScreen();
+    }
+    return const LoginScreen();
   }
+
+  // If the user is signed in, ensure their profile is complete.
+  final userId = session.user.id;
+  final complete = await ProfileService().isProfileComplete(userId);
+  return complete ? const RootShell() : const AccountSetupScreen();
+}
 
   @override
   Widget build(BuildContext context) {

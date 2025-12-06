@@ -80,7 +80,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
     super.dispose();
   }
 
-  Widget _buildSlider({
+    Widget _buildSlider({
     required String label,
     required double value,
     required ValueChanged<double> onChanged,
@@ -93,8 +93,8 @@ class _EditProfileModalState extends State<EditProfileModal> {
         Slider(
           value: value,
           min: 1,
-          max: 5,
-          divisions: 4,
+          max: labels.length.toDouble(),
+          divisions: labels.length - 1,
           label: labels[value.toInt() - 1],
           onChanged: onChanged,
         ),
@@ -160,7 +160,27 @@ class _EditProfileModalState extends State<EditProfileModal> {
               label: 'Budget',
               value: _budgetLevel,
               onChanged: (v) => setState(() => _budgetLevel = v),
-              labels: const ['<100', '100–300', '300–500', '500–1000', '>1000'],
+              labels: const [
+                '€0-150',
+                '€150-200',
+                '€200-250',
+                '€250-300',
+                '€300-350',
+                '€350-400',
+                '€400-450',
+                '€450-500',
+                '€500-550',
+                '€550-600',
+                '€600-650',
+                '€650-700',
+                '€700-750',
+                '€750-800',
+                '€800-850',
+                '€850-900',
+                '€900-950',
+                '€950-1000',
+                'Over €1000',
+              ],
             ),
             _buildSlider(
               label: 'Cleanliness',
