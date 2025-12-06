@@ -6,6 +6,7 @@ import '../widgets/roommate_finder_widgets/roommate_action_bar.dart';
 import '../widgets/roommate_finder_widgets/swipeable_card.dart';
 import '../services/matching_service.dart';
 import '../models/match_result.dart';
+import './home_screen.dart';
 
 class RoommateFinderScreen extends StatefulWidget {
   /// The search mode: 'find_place' (user looking for a room) or 'find_roommate' (host looking for a roommate).
@@ -67,7 +68,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       appBar: SimpleTopBar(
         title: 'Smart Match',
         onLeadingTap: () {
-          // TODO: Navigate to Home
+          Navigator.pop(context);
         },
         onTrailingTap: () {
           // TODO: Open filters

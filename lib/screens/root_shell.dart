@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/common/app_bottom_nav_bar.dart';
 import 'home_screen.dart';
-import 'houses_screen.dart';
 import 'matches_screen.dart';
 import 'profile_screen.dart';
 
@@ -43,13 +42,13 @@ class _RootShellState extends State<RootShell> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
+        // allow natural swiping between pages; use default physics to respect platform behavior
+        allowImplicitScrolling: true,
         children: const [
           HomeScreen(),
           MatchesScreen(),
           ProfileScreen(),
         ],
-        // allow natural swiping between pages; use default physics to respect platform behavior
-        allowImplicitScrolling: true,
       ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: _currentIndex,

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 class ProfileHeader extends StatelessWidget implements PreferredSizeWidget {
-  const ProfileHeader({super.key, this.onBack, this.onEdit});
+  const ProfileHeader({super.key, this.onEdit});
 
-  final VoidCallback? onBack;
   final VoidCallback? onEdit;
 
+  onEditPressed() {
+    if (onEdit != null) {
+      onEdit!();
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -15,11 +19,6 @@ class ProfileHeader extends StatelessWidget implements PreferredSizeWidget {
         color: Theme.of(context).scaffoldBackgroundColor,
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              color: Theme.of(context).colorScheme.onPrimary,
-              onPressed: onBack ?? () => Navigator.of(context).maybePop(),
-            ),
             const Expanded(
               child: Text(
                 'My Profile',

@@ -6,7 +6,6 @@ import '../widgets/home_screen_widgets/segmented_two_choice.dart';
 import '../widgets/home_screen_widgets/info_card.dart';
 import '../widgets/home_screen_widgets/primary_button.dart';
 import 'login_screen.dart';
-import 'houses_screen.dart';
 import 'roommate_finder_screen.dart';
 import 'add_house_screen.dart'; // 🆕 import the new screen
 

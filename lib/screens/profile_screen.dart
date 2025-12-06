@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-// Bottom navigation moved to RootShell
 import 'package:host_me/widgets/profile_screen_widgets/profile_header.dart';
 import 'package:host_me/widgets/profile_screen_widgets/profile_avatar_section.dart';
-import 'package:host_me/widgets/profile_screen_widgets/profile_progress_bar.dart';
 import 'package:host_me/widgets/profile_screen_widgets/interests_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/activity_section.dart';
 import 'package:host_me/widgets/profile_screen_widgets/preferences_section.dart';
-import 'home_screen.dart';
-import 'houses_screen.dart';
-import 'matches_screen.dart';
+import 'package:host_me/widgets/profile_screen_widgets/edit_profile_modal.dart';
+import 'package:host_me/widgets/profile_screen_widgets/about_section.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/profile_service.dart';
 import '../models/profile_model.dart';
 
@@ -27,9 +25,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double noise = 3;
   bool smoking = false;
   bool pets = false;
-
+  String? occupation;
   ProfileModel? _profile;
+  String bio="";
   bool _loadingProfile = true;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -56,6 +56,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Map UI budget level (1..5) to (min,max) range values for storage
+  (int? min, int? max) _budgetRangeForLevel(double level) {
+    switch (level.toInt()) {
+      case 1:
+        return (0, 100);
+      case 2:
+        return (100, 300);
+      case 3:
+        return (300, 500);
+      case 4:
+        return (500, 1000);
+      case 5:
+        return (1000, null); // open-ended upper bound
+      default:
+        return (null, null);
+    }
+  }
+
+  void _openEditModal() {
+    if (_loadingProfile) return;
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Edit Profile',
+      barrierColor: Colors.black54,
+      pageBuilder: (ctx, anim1, anim2) {
+        return Material(
+          type: MaterialType.transparency,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: EditProfileModal(
+          initialName: _profile?.fullName ?? '',
+          initialBio: _profile?.bio ?? '',
+          initialOccupation: _profile?.occupation,
+          initialBudgetLevel: budget,
+          initialCleanliness: cleanliness,
+          initialNoise: noise,
+          initialSmoking: smoking,
+          initialPets: pets,
+          onSave: ({
+            required String name,
+            required String bio,
+            required String? occupation,
+            required double budgetLevel,
+            required double cleanlinessLevel,
+            required double noiseLevel,
+            required bool smoking,
+            required bool pets,
+          }) {
+            _handleSave(
+              name: name,
+              bio: bio,
+              occupation: occupation,
+              budgetLevel: budgetLevel,
+              cleanlinessLevel: cleanlinessLevel,
+              noiseLevel: noiseLevel,
+              smoking: smoking,
+              pets: pets,
+            );
+          },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleSave({
+    required String name,
+    required String bio,
+    required String? occupation,
+    required double budgetLevel,
+    required double cleanlinessLevel,
+    required double noiseLevel,
+    required bool smoking,
+    required bool pets,
+  }) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return; // no user logged in
+    setState(() => _saving = true);
+    try {
+      final (min, max) = _budgetRangeForLevel(budgetLevel);
+      final existing = _profile;
+      final updated = (existing != null)
+          ? existing.copyWith(
+              fullName: name.isEmpty ? existing.fullName : name,
+              bio: bio.isNotEmpty ? bio : existing.bio,
+              occupation: occupation ?? existing.occupation,
+              budgetMin: min,
+              budgetMax: max,
+              cleanlinessLevel: cleanlinessLevel.toInt(),
+              noiseLevel: noiseLevel.toInt(),
+              smokingPreference: smoking,
+              petsPreference: pets,
+              updatedAt: DateTime.now(),
+            )
+          : ProfileModel(
+              id: user.id,
+              fullName: name,
+              bio: bio.isEmpty ? null : bio,
+              occupation: occupation,
+              budgetMin: min,
+              budgetMax: max,
+              cleanlinessLevel: cleanlinessLevel.toInt(),
+              noiseLevel: noiseLevel.toInt(),
+              smokingPreference: smoking,
+              petsPreference: pets,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+
+      await ProfileService().upsertProfile(updated);
+      setState(() {
+        _profile = updated;
+        budget = budgetLevel;
+        cleanliness = cleanlinessLevel;
+        noise = noiseLevel;
+        this.smoking = smoking;
+        this.pets = pets;
+        this.occupation = occupation;
+        _saving = false;
+      });
+    } catch (e) {
+      setState(() => _saving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save profile: $e')),
+        );
+      }
+    }
+  }
+
   double _computeBudgetLevel(int? min, int? max) {
     if (min == null && max == null) return 3;
     final values = [
@@ -71,16 +205,114 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return 5;
   }
 
+  // persists user avatars to supabase bucket
+  Future<String?> _uploadAvatar(User user, XFile file) async {
+    final supabase = Supabase.instance.client;
+    final fileBytes = await file.readAsBytes();
+    final fileExt = file.name.split('.').last;
+    final filePath = '${user.id}/avatar.$fileExt';
+
+    try {
+      await supabase.storage.from('UserPhotos').uploadBinary(
+            filePath,
+            fileBytes,
+            fileOptions: const FileOptions(upsert: true),
+          );
+      final publicUrl =
+          supabase.storage.from('UserPhotos').getPublicUrl(filePath);
+      return publicUrl;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final picked = await picker.pickImage(source: source);
+      if (picked != null) {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          setState(() => _saving = true);
+          try {
+            final url = await _uploadAvatar(user, picked);
+            if (url != null) {
+              // Update profile
+              final existing = _profile;
+              if (existing != null) {
+                final updated = existing.copyWith(
+                  avatarUrl: url,
+                  updatedAt: DateTime.now(),
+                );
+                await ProfileService().upsertProfile(updated);
+                if (mounted) {
+                  setState(() {
+                    _profile = updated;
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error uploading avatar: $e')),
+              );
+            }
+          } finally {
+            if (mounted) setState(() => _saving = false);
+          }
+        }
+      }
+    } catch (e) {
+      // Handle permission errors or picker errors
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+    }
+  }
+
+  void _showAvatarPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Camera'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.camera);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      appBar: const ProfileHeader(),
+      appBar: ProfileHeader(onEdit: _openEditModal),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_saving)
+              const LinearProgressIndicator(minHeight: 3),
             // --- Avatar + Bio ---
             if (_loadingProfile)
               const Center(child: CircularProgressIndicator())
@@ -90,16 +322,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   imageUrl: _profile?.avatarUrl ?? "",
                   name: _profile?.fullName ?? 'Your Name',
                   bio: _profile != null
-                      ? 'Occupation: ${_profile!.occupation ?? 'N/A'}'
+                      ? (_profile!.bio ?? 'Complete your bio below.')
                       : 'Complete your profile to personalize this section.',
+                  onEditAvatar: _showAvatarPicker,
                 ),
               ),
             const SizedBox(height: 20),
-
-            // --- Progress bar ---
-            const ProfileProgressBar(percent: 0.75),
-            const SizedBox(height: 20),
-
+            // About Section ---
+            AboutSection(
+              occupation: _profile?.occupation,
+            ),
+            const SizedBox(height: 24),
             // --- Interests ---
             const InterestsSection(),
             const SizedBox(height: 24),

@@ -6,9 +6,16 @@ import '../utils/notifications.dart';
 import '../models/profile_model.dart';
 import 'root_shell.dart';
 import '../widgets/common/labeled_slider.dart';
+import 'login_screen.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 class AccountSetupScreen extends StatefulWidget {
-  const AccountSetupScreen({super.key});
+  const AccountSetupScreen({super.key, this.initialUser});
+
+  // When navigating immediately after signUp, pass the returned user to avoid
+  // a brief window where Supabase.currentSession/currentUser may be null on web.
+  final User? initialUser;
 
   @override
   State<AccountSetupScreen> createState() => _AccountSetupScreenState();
@@ -17,6 +24,43 @@ class AccountSetupScreen extends StatefulWidget {
 class _AccountSetupScreenState extends State<AccountSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final ProfileService _profileService = ProfileService();
+
+
+  // persists user avatars to supabase bucket
+  Future<String?> _uploadAvatar(User user, XFile file) async {
+  print("UPLOAD STARTED");
+
+  final supabase = Supabase.instance.client;
+
+  final fileBytes = await file.readAsBytes();
+  final fileExt = file.name.split('.').last;
+  final filePath = '${user.id}/avatar.$fileExt';
+
+  print("READ BYTES OK, uploading to: $filePath");
+
+  try {
+    final uploadedPath = await supabase.storage
+        .from('UserPhotos')
+        .uploadBinary(
+          filePath,
+          fileBytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+
+    print("UPLOAD FINISHED, PATH = $uploadedPath");
+
+    final publicUrl =
+        supabase.storage.from('UserPhotos').getPublicUrl(filePath);
+
+    print("PUBLIC URL = $publicUrl");
+
+    return publicUrl;
+  } catch (e) {
+    print("UPLOAD FAILED: $e");
+    rethrow;
+  }
+}
+
 
   // Step management
   int _step = 0;
@@ -72,6 +116,37 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     _budgetMaxCtrl.addListener(_onFieldChanged);
     _avatarUrlCtrl.addListener(_onFieldChanged);
     _universityCtrl.addListener(_onFieldChanged);
+    // If profile already exists (e.g. user refreshed mid-setup), skip setup.
+    _checkExistingProfile();
+  }
+  Future<void> _checkExistingProfile() async {
+    final user = Supabase.instance.client.auth.currentUser ?? widget.initialUser;
+    if (user == null) return; // cannot check yet
+    try {
+      final exists = await _profileService.isProfileComplete(user.id);
+      if (exists && mounted) {
+        // ignore: avoid_print
+        print('[AccountSetup] profile already exists; redirecting to RootShell');
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const RootShell()),
+        );
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('[AccountSetup] profile check error: $e');
+    }
+  }
+
+  // Attempt to ensure we have an auth user. Tries immediate sources, then polls briefly.
+  Future<User?> _ensureAuthUser() async {
+    User? user = Supabase.instance.client.auth.currentUser ?? widget.initialUser;
+    if (user != null) return user;
+    // Poll for a short time (e.g., after signUp before session hydration on web)
+    for (int i = 0; i < 5 && user == null; i++) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      user = Supabase.instance.client.auth.currentUser;
+    }
+    return user ?? Supabase.instance.client.auth.currentSession?.user;
   }
 
   void _onFieldChanged() {
@@ -109,9 +184,24 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    // Validate currently visible fields
+    if (!_formKey.currentState!.validate()) {
+      // ignore: avoid_print
+      print('[AccountSetup] form validation failed at step=$_step');
+      return;
+    }
+    final user = await _ensureAuthUser();
+    if (user == null) {
+      // ignore: avoid_print
+      print('[AccountSetup] no auth user available (session/currentUser both null)');
+      await showAppError(context, 'Session lost. Please login again.', actionLabel: 'Login', onAction: () {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (r) => false,
+        );
+      });
+      return;
+    }
     setState(() => _submitting = true);
     try {
       final profile = ProfileModel(
@@ -132,6 +222,8 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
         cleanlinessLevel: _cleanliness.round(),
         noiseLevel: _noise.round(),
         dateOfBirth: _dob,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
       await _profileService.upsertProfile(profile);
       if (!mounted) return;
@@ -141,9 +233,8 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       // ignore: avoid_print
       print('[AccountSetup] profile upsert succeeded for user=${profile.id}');
 
-      Navigator.of(context).pushAndRemoveUntil(
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const RootShell()),
-        (route) => false,
       );
     } catch (e) {
       // ignore: avoid_print
@@ -160,30 +251,53 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     switch (_step) {
       case 0:
         return _centeredStep(
-          title: "Let's add a profile picture",
+          title: "Add a profile picture",
           child: Column(
-            children: [
-              CircleAvatar(
+          children: [
+            GestureDetector(
+              onTap: () async {
+                final picker = ImagePicker();
+                final picked = await picker.pickImage(source: ImageSource.gallery);
+
+                if (picked != null) {
+                  setState(() {
+                    _avatarUrlCtrl.text = 'uploading...';
+                  });
+
+                  final user = await _ensureAuthUser();
+                  if (user != null) {
+                    final uploadedUrl = await _uploadAvatar(user, picked);
+
+                    setState(() {
+                      _avatarUrlCtrl.text = uploadedUrl ?? '';
+                    });
+                  }
+                }
+              },
+              child: CircleAvatar(
                 radius: 48,
-                backgroundImage: (_avatarUrlCtrl.text.trim().isNotEmpty)
+                backgroundImage: _avatarUrlCtrl.text.trim().isNotEmpty &&
+                        !_avatarUrlCtrl.text.startsWith("uploading")
                     ? NetworkImage(_avatarUrlCtrl.text.trim())
                     : null,
-                child: _avatarUrlCtrl.text.trim().isEmpty
+                child: _avatarUrlCtrl.text.trim().isEmpty ||
+                        _avatarUrlCtrl.text.startsWith("uploading")
                     ? const Icon(Icons.person, size: 48)
                     : null,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _avatarUrlCtrl,
-                textAlign: TextAlign.center,
-                decoration: const InputDecoration(
-                  hintText: 'Paste an image URL',
-                ),
-                onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            const Text("Tap the avatar to upload a photo"),
+            TextFormField(
+              controller: _avatarUrlCtrl,
+              textAlign: TextAlign.center,
+              decoration: const InputDecoration(
+                hintText: 'Paste an image URL (optional)',
               ),
-            ],
-          ),
-        );
+            ),
+          ],
+        ),
+      );
       case 1:
         return _centeredStep(
           title: "What's your full name?",
@@ -224,7 +338,7 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
                 SizedBox(
                   width: 160,
                   child: DropdownButtonFormField<String>(
-                    value: _countryCode,
+                    initialValue: _countryCode,
                     items: _countries
                         .map((c) => DropdownMenuItem(
                               value: c['code'],
@@ -487,7 +601,13 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
                       )
                     else
                       ElevatedButton(
-                        onPressed: _canProceedCurrentStep() && !_submitting ? _submit : null,
+                        onPressed: _canProceedCurrentStep() && !_submitting
+                            ? () {
+                                // ignore: avoid_print
+                                print('[AccountSetup] Finish pressed step=$_step');
+                                _submit();
+                              }
+                            : null,
                         child: _submitting
                             ? const SizedBox(
                                 width: 18,
