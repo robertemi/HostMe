@@ -67,7 +67,6 @@ Future<void> showAppSuccess(BuildContext context, String message, {Duration dura
 
 class _AnimatedBannerOverlay extends StatefulWidget {
   const _AnimatedBannerOverlay({
-    Key? key,
     required this.icon,
     required this.title,
     required this.message,
@@ -75,7 +74,7 @@ class _AnimatedBannerOverlay extends StatefulWidget {
     required this.iconColor,
     this.actionLabel,
     this.onAction,
-  }) : super(key: key);
+  });
 
   final IconData icon;
   final String title;

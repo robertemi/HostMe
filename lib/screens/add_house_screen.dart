@@ -262,9 +262,9 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
 
       // Extract new house id robustly
       dynamic newHouseId;
-      if (insertResp is Map && insertResp.containsKey('id')) {
+      if (insertResp.containsKey('id')) {
         newHouseId = insertResp['id'];
-      } else if (insertResp is Map && insertResp['data'] != null && insertResp['data'] is Map && insertResp['data'].containsKey('id')) {
+      } else if (insertResp['data'] != null && insertResp['data'] is Map && insertResp['data'].containsKey('id')) {
         newHouseId = insertResp['data']['id'];
       } else if (insertResp is List && insertResp.isNotEmpty && insertResp[0] is Map && insertResp[0].containsKey('id')) {
         newHouseId = insertResp[0]['id'];
@@ -493,7 +493,6 @@ class _HoverDeleteImage extends StatefulWidget {
   const _HoverDeleteImage({
     required this.image,
     required this.onDelete,
-    super.key,
   });
 
   @override
