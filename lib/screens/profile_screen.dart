@@ -7,6 +7,7 @@ import 'package:host_me/widgets/profile_screen_widgets/preferences_section.dart'
 import 'package:host_me/widgets/profile_screen_widgets/edit_profile_modal.dart';
 import 'package:host_me/widgets/profile_screen_widgets/about_section.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/profile_service.dart';
 import '../models/profile_model.dart';
 
@@ -204,6 +205,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return 5;
   }
 
+  // persists user avatars to supabase bucket
+  Future<String?> _uploadAvatar(User user, XFile file) async {
+    final supabase = Supabase.instance.client;
+    final fileBytes = await file.readAsBytes();
+    final fileExt = file.name.split('.').last;
+    final filePath = '${user.id}/avatar.$fileExt';
+
+    try {
+      await supabase.storage.from('UserPhotos').uploadBinary(
+            filePath,
+            fileBytes,
+            fileOptions: const FileOptions(upsert: true),
+          );
+      final publicUrl =
+          supabase.storage.from('UserPhotos').getPublicUrl(filePath);
+      return publicUrl;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final picked = await picker.pickImage(source: source);
+      if (picked != null) {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          setState(() => _saving = true);
+          try {
+            final url = await _uploadAvatar(user, picked);
+            if (url != null) {
+              // Update profile
+              final existing = _profile;
+              if (existing != null) {
+                final updated = existing.copyWith(
+                  avatarUrl: url,
+                  updatedAt: DateTime.now(),
+                );
+                await ProfileService().upsertProfile(updated);
+                if (mounted) {
+                  setState(() {
+                    _profile = updated;
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error uploading avatar: $e')),
+              );
+            }
+          } finally {
+            if (mounted) setState(() => _saving = false);
+          }
+        }
+      }
+    } catch (e) {
+      // Handle permission errors or picker errors
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+    }
+  }
+
+  void _showAvatarPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Camera'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.camera);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -227,6 +324,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   bio: _profile != null
                       ? (_profile!.bio ?? 'Complete your bio below.')
                       : 'Complete your profile to personalize this section.',
+                  onEditAvatar: _showAvatarPicker,
                 ),
               ),
             const SizedBox(height: 20),
