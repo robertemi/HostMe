@@ -9,6 +9,8 @@ import '../models/match_result.dart';
 import './property_detail_screen.dart'; // <-- Make sure this exists
 import '../services/house_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/profile_service.dart';
+import '../models/house_model.dart';
 
 class RoommateFinderScreen extends StatefulWidget {
   /// The search mode: 'find_place' (user looking for a room) or 'find_roommate' (host looking for a roommate).
@@ -179,39 +181,54 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
                       // Swipeable Card WRAPPED IN A TAP HANDLER
                       GestureDetector(
                         onTap: () async {
-                          final houseService = HouseService();
-                          final currentUserId = Supabase.instance.client.auth.currentUser!.id;
+                            final houseService = HouseService();
+                            final profileService = ProfileService();
+                            final currentUserId = Supabase.instance.client.auth.currentUser!.id;
 
-                          // Decide who is the host for this match
-                          late final String hostId;
+                            // The candidate shown on the card (the person whose profile we want to view)
+                            final String candidateId = topMatch.userId;
 
-                          if (widget.searchMode == 'find_place') {
-                            // user is looking for place -> card shows HOSTS
-                            hostId = topMatch.userId;
-                          } else {
-                            // user is host looking for roommates -> user owns house
-                            hostId = currentUserId;
-                          }
+                            // Who owns the house we should show: for find_place show candidate's house,
+                            // for find_roommate show current user's house (host)
+                            final String houseOwnerId = widget.searchMode == 'find_place' ? candidateId : currentUserId;
 
-                          final house = await houseService.getHouseForHost(hostId);
+                            // Load house for the owner (may be null)
+                            var house = await houseService.getHouseForHost(houseOwnerId);
 
-                          if (house == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("This host has no property listed.")),
-                            );
-                            return;
-                          }
+                            // Always fetch the candidate's full profile (the other user's profile)
+                            final candidateProfile = await profileService.fetchProfile(candidateId);
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PropertyDetailScreen(
-                                house: house,
-                                host: topMatch 
+                            // If house missing:
+                            if (house == null) {
+                              if (widget.searchMode == 'find_place') {
+                                // In "find_place" mode require the host to have a listing
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("This host has no property listed.")),
+                                );
+                                return;
+                              } else {
+                                // In "find_roommate" (you're the host), property tab is not needed.
+                                // Create a minimal placeholder House so PropertyDetailScreen can render.
+                                house = House(
+                                  id: 'tmp-${currentUserId}',
+                                  userId: currentUserId,
+                                  createdAt: DateTime.now(),
+                                );
+                              }
+                            }
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PropertyDetailScreen(
+                                  house: house!,
+                                  host: topMatch,
+                                  hostProfile: candidateProfile,
+                                  hidePropertyTab: widget.searchMode == 'find_roommate',
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
                         child: SwipeableCard(
                           key: ValueKey(topMatch.userId),
                           onSwipeRight: () => _handleSwipe(topMatch, true),
