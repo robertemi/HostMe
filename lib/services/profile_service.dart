@@ -70,4 +70,49 @@ class ProfileService {
       }
     }
   }
+
+  Future<List<ProfileModel>> getSwipedProfiles(String userId) async {
+    try {
+      final response = await _client
+          .from('swipes')
+          .select('profiles!swipes_target_id_fkey(*)')
+          .eq('liker_id', userId)
+          .eq('is_like', true)
+          .order('created_at', ascending: false);
+
+      final data = response as List<dynamic>;
+      return data
+          .map((e) => ProfileModel.fromMap(e['profiles'] as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<ProfileModel>> getMatches(String userId) async {
+    try {
+      final response = await _client
+          .from('matches')
+          .select('''
+            user1:profiles!matches_user1_id_fkey(*),
+            user2:profiles!matches_user2_id_fkey(*)
+          ''')
+          .or('user1_id.eq.$userId,user2_id.eq.$userId')
+          .order('created_at', ascending: false);
+
+      final data = response as List<dynamic>;
+      return data.map((e) {
+        final user1 = e['user1'] as Map<String, dynamic>;
+        final user2 = e['user2'] as Map<String, dynamic>;
+        
+        if (user1['id'] == userId) {
+          return ProfileModel.fromMap(user2);
+        } else {
+          return ProfileModel.fromMap(user1);
+        }
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
 }
