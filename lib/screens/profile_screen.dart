@@ -334,7 +334,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 24),
             // --- Interests ---
-            const InterestsSection(),
+            InterestsSection(
+              interests: _profile?.interests ?? [],
+              onChanged: (newInterests) {
+                if (_profile != null) {
+                  setState(() {
+                    _profile = _profile!.copyWith(interests: newInterests);
+                  });
+                  // Auto-save interests when changed
+                  ProfileService().upsertProfile(_profile!).catchError((e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to save interests: $e')),
+                      );
+                    }
+                  });
+                }
+              },
+            ),
             const SizedBox(height: 24),
 
             // --- Preferences ---

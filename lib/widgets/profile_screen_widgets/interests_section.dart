@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
-//TODO : Make the inerests section responsive (no more pixel overflow )
-//TODO : Add a x button in the chips to remove an interest
-class InterestsSection extends StatefulWidget {
-  const InterestsSection({super.key, this.initialInterests = const []});
 
-  final List<String> initialInterests;
+class InterestsSection extends StatelessWidget {
+  const InterestsSection({
+    super.key,
+    required this.interests,
+    required this.onChanged,
+  });
 
-  @override
-  State<InterestsSection> createState() => _InterestsSectionState();
-}
+  final List<String> interests;
+  final ValueChanged<List<String>> onChanged;
 
-class _InterestsSectionState extends State<InterestsSection> {
-  late List<String> _interests;
-
-  @override
-  void initState() {
-    super.initState();
-    _interests = List.of(widget.initialInterests);
-  }
-// Modal for adding a new interest
-  Future<void> _addInterest() async {
+  // Modal for adding a new interest
+  Future<void> _addInterest(BuildContext context) async {
     final controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
@@ -42,24 +34,29 @@ class _InterestsSectionState extends State<InterestsSection> {
       },
     );
     if (result != null && result.isNotEmpty) {
-      setState(() => _interests.add(result));
+      if (!interests.contains(result)) {
+        onChanged([...interests, result]);
+      }
     }
   }
-// Main build method for the interests section
+
+  // Main build method for the interests section
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Interests',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
+        const Padding(
+          padding: EdgeInsets.only(top: 4),
+          child: Text(
+            'Interests',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-
         const SizedBox(width: 16),
         // Interests chips and add button
         Expanded(
@@ -67,13 +64,16 @@ class _InterestsSectionState extends State<InterestsSection> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final interest in _interests)
+              for (final interest in interests)
                 _InterestChip(
                   label: interest,
-                  onRemove: () => setState(() => _interests.remove(interest)),
+                  onRemove: () {
+                    final newList = List<String>.from(interests)..remove(interest);
+                    onChanged(newList);
+                  },
                 ),
               GestureDetector(
-                onTap: _addInterest,
+                onTap: () => _addInterest(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   height: 32,
@@ -101,6 +101,7 @@ class _InterestsSectionState extends State<InterestsSection> {
     );
   }
 }
+
 
 class _InterestChip extends StatelessWidget {
   const _InterestChip({required this.label, required this.onRemove});

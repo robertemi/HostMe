@@ -43,6 +43,9 @@ class ProfileModel {
   final DateTime? createdAt;   // timestamptz
   final DateTime? updatedAt;   // timestamptz
 
+  // Relations
+  final List<String>? interests;
+
   const ProfileModel({
     required this.id,
     this.email,
@@ -68,6 +71,7 @@ class ProfileModel {
     this.isActive,
     this.createdAt,
     this.updatedAt,
+    this.interests,
   });
 
   // ---------- Parsing helpers ----------
@@ -98,6 +102,17 @@ class ProfileModel {
 
   // ---------- Factory: from DB map ----------
   factory ProfileModel.fromMap(Map<String, dynamic> map) {
+    // Parse interests if available from join
+    List<String>? parsedInterests;
+    if (map['profile_interests'] != null) {
+      final list = map['profile_interests'] as List;
+      parsedInterests = list
+          .map((e) => e['interests']?['name'] as String?)
+          .where((e) => e != null)
+          .cast<String>()
+          .toList();
+    }
+
     return ProfileModel(
       id: map['id'] as String, // uuid required
       email: map['email'] as String?,
@@ -123,6 +138,7 @@ class ProfileModel {
       isActive: _parseBool(map['is_active']),
       createdAt: _parseDate(map['created_at']),
       updatedAt: _parseDate(map['updated_at']),
+      interests: parsedInterests,
     );
   }
 
@@ -183,6 +199,7 @@ class ProfileModel {
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
+    List<String>? interests,
   }) {
     return ProfileModel(
       id: id ?? this.id,
@@ -210,6 +227,7 @@ class ProfileModel {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      interests: interests ?? this.interests,
     );
   }
 
