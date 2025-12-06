@@ -18,7 +18,7 @@ dependencies:
   flutter_svg: ^2.0.10
   timeago: ^3.3.0
   sensors_plus: ^7.0.0
-
+  url_strategy: ^0.2.0
   image_picker: ^1.0.0
   shared_preferences: ^2.1.0
 

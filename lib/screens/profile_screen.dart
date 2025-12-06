@@ -60,15 +60,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   (int? min, int? max) _budgetRangeForLevel(double level) {
     switch (level.toInt()) {
       case 1:
-        return (0, 100);
+        return (0, 150);
       case 2:
-        return (100, 300);
+        return (150, 200);
       case 3:
-        return (300, 500);
+        return (200, 250);
       case 4:
-        return (500, 1000);
+        return (250, 300);
       case 5:
-        return (1000, null); // open-ended upper bound
+        return (300, 350);
+      case 6: 
+        return (350, 400);
+      case 7: 
+        return (400, 450);
+      case 8: 
+        return (450, 500);
+      case 9: 
+        return (500, 550);
+      case 10: 
+        return (550, 600);
+      case 11: 
+        return (600, 650);
+      case 12: 
+        return (650, 700);
+      case 13: 
+        return (700, 750);
+      case 14: 
+        return (750, 800);
+      case 15: 
+        return (800, 850);
+      case 16: 
+        return (850, 900);
+      case 17: 
+        return (900, 950);
+      case 18: 
+        return (950, 1000);
+      case 19: 
+        return (1000, null);
       default:
         return (null, null);
     }
@@ -197,12 +225,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (max != null) max.toDouble(),
     ];
     final v = values.isEmpty ? 0 : (values.reduce((a, b) => a + b) / values.length);
-    // Match labels in PreferencesSection (EUR): <100, 100-300, 300-500, 500-1000, >1000
-    if (v <= 100) return 1;
-    if (v <= 300) return 2;
-    if (v <= 500) return 3;
-    if (v <= 1000) return 4;
-    return 5;
+    
+    // Map to 19-level scale to match _budgetRangeForLevel
+    if (v < 75) return 1;       // 0–150
+    if (v < 175) return 2;      // 150–200
+    if (v < 225) return 3;      // 200–250
+    if (v < 275) return 4;      // 250–300
+    if (v < 325) return 5;      // 300–350
+    if (v < 375) return 6;      // 350–400
+    if (v < 425) return 7;      // 400–450
+    if (v < 475) return 8;      // 450–500
+    if (v < 525) return 9;      // 500–550
+    if (v < 575) return 10;     // 550–600
+    if (v < 625) return 11;     // 600–650
+    if (v < 675) return 12;     // 650–700
+    if (v < 725) return 13;     // 700–750
+    if (v < 775) return 14;     // 750–800
+    if (v < 825) return 15;     // 800–850
+    if (v < 875) return 16;     // 850–900
+    if (v < 925) return 17;     // 900–950
+    if (v < 975) return 18;     // 950–1000
+    return 19;                  // 1000+
   }
 
   // persists user avatars to supabase bucket
