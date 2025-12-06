@@ -27,11 +27,6 @@ class ChatBubble extends StatelessWidget {
                 message.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (!message.isMe)
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: NetworkImage(message.avatarUrl),
-                ),
               const SizedBox(width: 8),
               Flexible(
                 child: Container(
@@ -57,11 +52,6 @@ class ChatBubble extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              if (message.isMe)
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: NetworkImage(message.avatarUrl),
-                ),
             ],
           ),
           const SizedBox(height: 4),

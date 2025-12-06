@@ -23,116 +23,104 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<Message> _messages = [];
+  late final String userId;
 
   @override
   void initState() {
     super.initState();
+    userId = Supabase.instance.client.auth.currentUser!.id;
+
     _fetchInitialMessages();
     _listenToMessages();
   }
 
+  // -----------------------------
+  // 1. INITIAL LOAD (NO SORTING)
+  // -----------------------------
   Future<void> _fetchInitialMessages() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-
-    final response = await Supabase.instance.client
+    final data = await Supabase.instance.client
         .from('messages')
         .select()
-        .or('sender_id.eq.$userId,receiver_id.eq.$userId')
-        .order('created_at');
+        .or(
+          'and(sender_id.eq.$userId,receiver_id.eq.${widget.receiverId}),'
+          'and(sender_id.eq.${widget.receiverId},receiver_id.eq.$userId)',
+        )
+        .order('created_at', ascending: true);
 
-    final data = response as List<dynamic>;
     setState(() {
-      _messages.addAll(
-        data.where((msg) =>
-            (msg['sender_id'] == userId && msg['receiver_id'] == widget.receiverId) ||
-            (msg['sender_id'] == widget.receiverId && msg['receiver_id'] == userId)).map(
-          (msg) {
-            final createdAt = msg['created_at'];
-            DateTime time;
-            if (createdAt is String) {
-              time = DateTime.tryParse(createdAt) ?? DateTime.now();
-            } else if (createdAt is DateTime) {
-              time = createdAt;
-            } else {
-              time = DateTime.now();
-            }
-
-            return Message(
-              sender: msg['sender_id'],
-              text: msg['text'],
-              time: time,
-              isMe: msg['sender_id'] == userId,
-              avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
-            );
-          },
-        ),
-      );
+      _messages.clear();
+      for (var msg in data) {
+        final time = DateTime.tryParse(msg['created_at']) ?? DateTime.now();
+        _messages.add(
+          Message(
+            sender: msg['sender_id'],
+            text: msg['text'],
+            time: time,
+            isMe: msg['sender_id'] == userId,
+          ),
+        );
+      }
     });
   }
 
+  // -----------------------------
+  // 2. REALTIME LISTENER
+  // -----------------------------
   void _listenToMessages() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-
     Supabase.instance.client
-        .from('messages')
-        .stream(primaryKey: ['id'])
-        .order('created_at')
-        .listen((List<Map<String, dynamic>> data) {
-      final filtered = data.where((msg) =>
-          (msg['sender_id'] == userId && msg['receiver_id'] == widget.receiverId) ||
-          (msg['sender_id'] == widget.receiverId && msg['receiver_id'] == userId));
+        .channel('messages-channel')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'messages',
+          callback: (payload) {
+            final msg = payload.newRecord!;
 
-      setState(() {
-        _messages
-          ..clear()
-          ..addAll(filtered.map((msg) {
-            final createdAt = msg['created_at'];
-            DateTime time;
-            if (createdAt is String) {
-              time = DateTime.tryParse(createdAt) ?? DateTime.now();
-            } else if (createdAt is DateTime) {
-              time = createdAt;
-            } else {
-              time = DateTime.now();
+            // Only messages for this conversation
+            final sender = msg['sender_id'];
+            final receiver = msg['receiver_id'];
+
+            if (!(
+              (sender == userId && receiver == widget.receiverId) ||
+              (sender == widget.receiverId && receiver == userId)
+            )) {
+              return;
             }
 
-            return Message(
-              sender: msg['sender_id'],
-              text: msg['text'],
-              time: time,
-              isMe: msg['sender_id'] == userId,
-              avatarUrl: msg['avatar'] ?? 'https://i.pravatar.cc/150?img=3',
-            );
-          }
-          )
-          );
-        
-      });
-    });
+            final createdAt = msg['created_at'];
+            if (_messages.any((m) => m.time.toIso8601String() == createdAt)) return;
+
+            final time = DateTime.tryParse(createdAt) ?? DateTime.now();
+
+            setState(() {
+              _messages.add(
+                Message(
+                  sender: sender,
+                  text: msg['text'],
+                  time: time,
+                  isMe: sender == userId,
+                ),
+              );
+            });
+          },
+        )
+        .subscribe();
   }
-  
-    
 
+  // -----------------------------
+  // 3. SEND MESSAGE
+  // -----------------------------
   void _sendMessage() async {
-    if (_controller.text.trim().isEmpty) return;
-
     final text = _controller.text.trim();
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (text.isEmpty) return;
 
     await Supabase.instance.client.from('messages').insert({
       'sender_id': userId,
       'receiver_id': widget.receiverId,
       'text': text,
-      'avatar': 'https://i.pravatar.cc/150?img=5', // current user avatar
     });
 
     _controller.clear();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
@@ -144,45 +132,27 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             CircleAvatar(backgroundImage: NetworkImage(widget.receiverAvatar)),
             const SizedBox(width: 10),
-            Text(
-              widget.receiverName,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
+            Text(widget.receiverName),
           ],
         ),
-        actions: const [
-          SizedBox(width: 8),
-          Icon(Icons.more_vert),
-          SizedBox(width: 8),
-        ],
       ),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                reverse: true,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  return ChatBubble(message: _messages[index]);
-                },
-              ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return ChatBubble(message: _messages[index]);
+              },
             ),
-            SafeArea(
-              top: false,
-              child: ChatInputField(
-                controller: _controller,
-                onSend: _sendMessage,
-              ),
-            ),
-          ],
-        ),
+          ),
+          ChatInputField(
+            controller: _controller,
+            onSend: _sendMessage,
+          ),
+        ],
       ),
     );
   }
-
 }
-
-
