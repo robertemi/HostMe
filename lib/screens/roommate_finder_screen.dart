@@ -6,7 +6,9 @@ import '../widgets/roommate_finder_widgets/roommate_action_bar.dart';
 import '../widgets/roommate_finder_widgets/swipeable_card.dart';
 import '../services/matching_service.dart';
 import '../models/match_result.dart';
-import './home_screen.dart';
+import './property_detail_screen.dart'; // <-- Make sure this exists
+import '../services/house_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RoommateFinderScreen extends StatefulWidget {
   /// The search mode: 'find_place' (user looking for a room) or 'find_roommate' (host looking for a roommate).
@@ -35,7 +37,6 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
   }
 
   Future<void> _loadMatches() async {
-    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -43,19 +44,18 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
 
     try {
       final matches = await _matchingService.getSmartMatches(widget.searchMode);
-      if (mounted) {
-        setState(() {
-          _matches = matches;
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+
+      setState(() {
+        _matches = matches;
+        _isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
@@ -67,9 +67,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: SimpleTopBar(
         title: 'Smart Match',
-        onLeadingTap: () {
-          Navigator.pop(context);
-        },
+        onLeadingTap: () => Navigator.pop(context),
         onTrailingTap: () {
           // TODO: Open filters
         },
@@ -94,7 +92,10 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
             Text('Error loading matches', style: theme.textTheme.titleMedium),
-            TextButton(onPressed: _loadMatches, child: const Text('Retry')),
+            TextButton(
+              onPressed: _loadMatches,
+              child: const Text('Retry'),
+            ),
           ],
         ),
       );
@@ -107,10 +108,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
           children: [
             const Icon(Icons.search_off, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            Text(
-              'No matches found yet.',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('No matches found yet.', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             const Text(
               'Try adjusting your profile preferences.',
@@ -121,29 +119,25 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       );
     }
 
-    // For now, just show the top match. 
-    // In a real app, you'd use a Swiper controller to iterate through _matches.
+    // For now, use only top match
     final topMatch = _matches.first;
 
-    // Determine what image to show based on mode
+    // Image logic
     final String? displayImage;
     final String? hostAvatar;
-    
+
     if (widget.searchMode == 'find_place') {
-      // Show house image as main, host avatar as bubble
       displayImage = topMatch.houseImage ?? topMatch.avatarUrl;
       hostAvatar = topMatch.avatarUrl;
     } else {
-      // Show person's avatar as main (no host bubble for seekers)
       displayImage = topMatch.avatarUrl;
       hostAvatar = null;
     }
-    
-    // Build tags list from profile data
+
+    // Build tags list
     final tags = <String>[];
     if (topMatch.occupation != null) tags.add(topMatch.occupation!);
     if (topMatch.gender != null) tags.add(topMatch.gender!);
-    // Add compatibility highlights
     if (topMatch.budgetScore > 80) tags.add('Budget Match');
     if (topMatch.lifestyleScore > 80) tags.add('Lifestyle Match');
 
@@ -161,48 +155,80 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Tilted background card (decoration)
+                      // Rotated background card
                       Transform.rotate(
                         angle: -4 * (math.pi / 180),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Container(
-                            width: double.infinity,
-                            height: double.infinity,
-                            margin: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: theme.brightness == Brightness.dark
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFFE5E7EB),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
+                        child: Container(
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.brightness == Brightness.dark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE5E7EB),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      // The Swipeable Profile Card with 45° tilt
-                      SwipeableCard(
-                        key: ValueKey(topMatch.userId),
-                        onSwipeRight: () => _handleSwipe(topMatch, true),
-                        onSwipeLeft: () => _handleSwipe(topMatch, false),
-                        maxRotation: 30.0, // 30 degrees max tilt (45 is too extreme)
-                        child: RoommateProfileCard(
-                          name: topMatch.fullName ?? 'Unknown',
-                          age: topMatch.age ?? 0,
-                          bio: topMatch.bio ?? 'No bio available.',
-                          tags: tags,
-                          imageUrl: displayImage,
-                          matchScore: topMatch.matchScore,
-                          rentPrice: topMatch.houseRent,
-                          houseAddress: topMatch.houseAddress,
-                          hostAvatarUrl: hostAvatar,
-                          searchMode: widget.searchMode,
+
+                      // Swipeable Card WRAPPED IN A TAP HANDLER
+                      GestureDetector(
+                        onTap: () async {
+                          final houseService = HouseService();
+                          final currentUserId = Supabase.instance.client.auth.currentUser!.id;
+
+                          // Decide who is the host for this match
+                          late final String hostId;
+
+                          if (widget.searchMode == 'find_place') {
+                            // user is looking for place -> card shows HOSTS
+                            hostId = topMatch.userId;
+                          } else {
+                            // user is host looking for roommates -> user owns house
+                            hostId = currentUserId;
+                          }
+
+                          final house = await houseService.getHouseForHost(hostId);
+
+                          if (house == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("This host has no property listed.")),
+                            );
+                            return;
+                          }
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PropertyDetailScreen(
+                                house: house,
+                                host: topMatch 
+                              ),
+                            ),
+                          );
+                        },
+                        child: SwipeableCard(
+                          key: ValueKey(topMatch.userId),
+                          onSwipeRight: () => _handleSwipe(topMatch, true),
+                          onSwipeLeft: () => _handleSwipe(topMatch, false),
+                          maxRotation: 30.0,
+                          child: RoommateProfileCard(
+                            name: topMatch.fullName ?? 'Unknown',
+                            age: topMatch.age ?? 0,
+                            bio: topMatch.bio ?? 'No bio available.',
+                            tags: tags,
+                            imageUrl: displayImage,
+                            matchScore: topMatch.matchScore,
+                            rentPrice: topMatch.houseRent,
+                            houseAddress: topMatch.houseAddress,
+                            hostAvatarUrl: hostAvatar,
+                            searchMode: widget.searchMode,
+                          ),
                         ),
                       ),
                     ],
@@ -212,11 +238,11 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+
         RoommateActionBar(
           onNope: () => _triggerSwipe(false),
           onSuperLike: () {
-            // TODO: Handle "Super Like" action
+            // TODO: Handle "Super Like"
           },
           onLike: () => _triggerSwipe(true),
         ),
@@ -225,24 +251,24 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
     );
   }
 
+  // Programmatic swipe handling
   void _triggerSwipe(bool isLike) {
     if (_matches.isEmpty) return;
-    // Programmatically dismiss (not easily supported by Dismissible without a controller, 
-    // so we just manually call the handler and remove from list for now)
     _handleSwipe(_matches.first, isLike);
   }
 
   Future<void> _handleSwipe(MatchResult match, bool isLike) async {
-    // 1. Optimistically remove from UI
+    // Remove from UI immediately
     setState(() {
       _matches.remove(match);
     });
 
     try {
-      // 2. Send to Backend
-      final isMutualMatch = await _matchingService.swipeUser(match.userId, isLike);
+      // Send swipe to backend
+      final isMutualMatch =
+          await _matchingService.swipeUser(match.userId, isLike);
 
-      // 3. If Mutual Match, show Dialog!
+      // Mutual like popup
       if (isMutualMatch && mounted) {
         showDialog(
           context: context,
@@ -266,12 +292,11 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
         );
       }
     } catch (e) {
-      // Revert on error? Or just show snackbar
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving swipe: $e')),
-        );
-      }
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving swipe: $e')),
+      );
     }
   }
 }
