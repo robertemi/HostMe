@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 class SwipeableCard extends StatefulWidget {
   const SwipeableCard({
@@ -27,6 +29,11 @@ class _SwipeableCardState extends State<SwipeableCard>
   double _dragY = 0;
   bool _isDragging = false;
 
+  // Sensor state for 3D tilt effect
+  double _tiltX = 0; // Rotation around Y axis (left/right tilt)
+  double _tiltY = 0; // Rotation around X axis (up/down tilt)
+  StreamSubscription<AccelerometerEvent>? _accelSubscription;
+
   late AnimationController _animationController;
   late Animation<double> _returnAnimation;
 
@@ -37,10 +44,52 @@ class _SwipeableCardState extends State<SwipeableCard>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
+    // Subscribe to accelerometer events for the tilt effect
+    // We use accelerometer instead of gyroscope for a stable "looking around" effect
+    _accelSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
+      if (!mounted) return;
+      
+      // Only apply tilt when not dragging to avoid fighting the user's finger
+      if (!_isDragging) {
+        setState(() {
+          // Mapping accelerometer to rotation angles
+          // event.x (Left/Right tilt) -> Rotate around Y axis
+          // event.y (Up/Down tilt)    -> Rotate around X axis
+          
+          const double sensitivity = 0.05; // Increased sensitivity slightly
+          
+          // If phone tilts Left (positive x?), we want to rotate Y.
+          // Experimentally:
+          // event.x > 0 (Left tilt) -> We want to see the right side? -> Rotate Y positive?
+          // Let's try direct mapping first.
+          
+          double targetRotateY = -event.x * sensitivity; 
+          double targetRotateX = event.y * sensitivity;
+
+          // Simple lerp for smoothness
+          _tiltX = _lerp(_tiltX, targetRotateY, 0.1); // _tiltX is actually Rotation Y (left/right)
+          _tiltY = _lerp(_tiltY, targetRotateX, 0.1); // _tiltY is actually Rotation X (up/down)
+        });
+      } else {
+        // Reset tilt when dragging
+        if (_tiltX != 0 || _tiltY != 0) {
+          setState(() {
+            _tiltX = 0;
+            _tiltY = 0;
+          });
+        }
+      }
+    });
+  }
+
+  double _lerp(double start, double end, double t) {
+    return start + (end - start) * t;
   }
 
   @override
   void dispose() {
+    _accelSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -142,8 +191,11 @@ class _SwipeableCardState extends State<SwipeableCard>
       child: Transform(
         alignment: Alignment.center,
         transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.001) // Add perspective for 3D effect
           ..translate(_dragX, _dragY)
-          ..rotateZ(rotationAngle),
+          ..rotateZ(rotationAngle)
+          ..rotateX(_tiltY) // Apply accelerometer tilt (up/down)
+          ..rotateY(_tiltX), // Apply accelerometer tilt (left/right)
         child: Stack(
           children: [
             widget.child,
