@@ -48,7 +48,7 @@ Future<List<MatchModel>> fetchMatches() async {
     return MatchModel(
       id: otherUser['id'],
       name: otherUser['full_name'] ?? 'Unknown',
-      avatarUrl: otherUser['avatar_url'] ?? 'https://i.pravatar.cc/150',
+      avatarUrl: otherUser['avatar_url'] ?? 'null',
       message: '', // can fill from latest chat message later
       timeAgo: formatTimeAgo(_parseTime(match['created_at'])),
       isOnline: otherUser['is_online'] ?? false,

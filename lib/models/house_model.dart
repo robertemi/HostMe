@@ -1,4 +1,3 @@
-import 'package:meta/meta.dart';
 
 class House {
   final String id;
@@ -14,6 +13,8 @@ class House {
 
   final double? rent;
   final double? livingArea;
+  final double? latitude;
+  final double? longitude;
 
   final int? floorNumber;
   final String? type;
@@ -40,6 +41,8 @@ class House {
     this.numberOfBathrooms,
     this.rent,
     this.livingArea,
+    this.latitude,
+    this.longitude,
     this.floorNumber,
     this.type,
     this.hasElevator,
@@ -66,6 +69,8 @@ class House {
 
       rent: (json['rent'] as num?)?.toDouble(),
       livingArea: (json['living_area'] as num?)?.toDouble(),
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
 
       floorNumber: json['floor_number'] as int?,
       type: json['type'] as String?,
@@ -75,7 +80,7 @@ class House {
 
       numberOfCurrentRoommates: json['number_of_current_roommates'] as int?,
 
-      image: json['image'] as String?,
+      image: _parseSingleImage(json['image']),
 
       // Convert comma-separated or JSON array to List<String>
       imagePaths: _parseImagePaths(json['image_path']),
@@ -99,6 +104,8 @@ class House {
 
       'rent': rent,
       'living_area': livingArea,
+      'latitude': latitude,
+      'longitude': longitude,
 
       'floor_number': floorNumber,
       'type': type,
@@ -126,9 +133,42 @@ class House {
 
     // If database stores them as a comma-separated String
     if (raw is String) {
+      // Handle JSON array string format like '["url1", "url2"]'
+      if (raw.trim().startsWith('[') && raw.trim().endsWith(']')) {
+        try {
+          // Simple manual parse to avoid dart:convert import if not present, 
+          // or just strip brackets and split by comma/quote
+          final content = raw.trim().substring(1, raw.trim().length - 1);
+          if (content.isEmpty) return [];
+          
+          return content.split(',')
+              .map((e) => e.trim().replaceAll('"', '').replaceAll("'", ""))
+              .where((e) => e.isNotEmpty)
+              .toList();
+        } catch (_) {
+          // Fallback to simple split
+        }
+      }
       return raw.split(',').map((e) => e.trim()).toList();
     }
 
     return null;
+  }
+
+  static String? _parseSingleImage(dynamic raw) {
+    if (raw == null) return null;
+    String s = raw.toString();
+    // If it looks like a JSON array ["url"], take the first one
+    if (s.trim().startsWith('[') && s.trim().endsWith(']')) {
+      try {
+        final content = s.trim().substring(1, s.trim().length - 1);
+        if (content.isEmpty) return null;
+        final parts = content.split(',');
+        if (parts.isNotEmpty) {
+          return parts.first.trim().replaceAll('"', '').replaceAll("'", "");
+        }
+      } catch (_) {}
+    }
+    return s;
   }
 }

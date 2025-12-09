@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import '../models/house_model.dart';
 import '../models/match_result.dart';
 import '/models/profile_model.dart';
@@ -28,15 +30,61 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
   late MatchResult host;
   ProfileModel? hostProfile;
 
+  // Map related state
+  GoogleMapController? _mapController;
+  Set<Marker> _markers = {};
+  LatLng? _houseLocation;
+  bool _locationPermissionGranted = false;
+
   @override
   void initState() {
     super.initState();
     house = widget.house;
     host = widget.host;
     hostProfile = widget.hostProfile;
+
+    // Initialize map data
+    if (house.latitude != null && house.longitude != null) {
+      _houseLocation = LatLng(house.latitude!, house.longitude!);
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('house'),
+          position: _houseLocation!,
+          infoWindow: InfoWindow(title: house.address ?? 'House Location'),
+        ),
+      );
+    }
+    _checkLocationPermission();
+
     // Only create 1 tab if hiding property tab, otherwise 2
     final tabCount = widget.hidePropertyTab ? 1 : 2;
     _tabController = TabController(length: tabCount, vsync: this);
+  }
+
+  Future<void> _checkLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    setState(() {
+      _locationPermissionGranted = true;
+    });
   }
 
   int _calculateAge(DateTime dob) {
@@ -89,6 +137,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
           _photoCarousel(),
           const SizedBox(height: 20),
           _infoSection(),
+          const SizedBox(height: 20),
+          _buildMapSection(),
           const SizedBox(height: 40),
         ],
       ),
@@ -173,6 +223,46 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMapSection() {
+    if (_houseLocation == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            "Location",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Container(
+          height: 300,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _houseLocation!,
+                zoom: 14,
+              ),
+              markers: _markers,
+              myLocationEnabled: _locationPermissionGranted,
+              myLocationButtonEnabled: true,
+              onMapCreated: (controller) {
+                _mapController = controller;
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -300,9 +390,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
   // Helper: Format budget range
   String _formatBudgetRange(int? min, int? max) {
     if (min == null && max == null) return 'Not set';
-    if (min != null && max != null) return '\$${min}–\$${max}';
-    if (min != null) return '\$${min}+';
-    if (max != null) return 'Up to \$${max}';
+    if (min != null && max != null) return '\$$min–\$$max';
+    if (min != null) return '\$$min+';
+    if (max != null) return 'Up to \$$max';
     return 'Not set';
   }
 
