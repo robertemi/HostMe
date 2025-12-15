@@ -47,7 +47,24 @@ class MatchResult {
       lifestyleScore: map['lifestyle_score'] as int? ?? 0,
       houseAddress: map['house_address'] as String?,
       houseRent: (map['house_rent'] as num?)?.toDouble(),
-      houseImage: map['house_image'] as String?,
+      houseImage: _parseSingleImage(map['house_image']),
     );
+  }
+
+  static String? _parseSingleImage(dynamic raw) {
+    if (raw == null) return null;
+    String s = raw.toString();
+    // If it looks like a JSON array ["url"], take the first one
+    if (s.trim().startsWith('[') && s.trim().endsWith(']')) {
+      try {
+        final content = s.trim().substring(1, s.trim().length - 1);
+        if (content.isEmpty) return null;
+        final parts = content.split(',');
+        if (parts.isNotEmpty) {
+          return parts.first.trim().replaceAll('"', '').replaceAll("'", "");
+        }
+      } catch (_) {}
+    }
+    return s;
   }
 }

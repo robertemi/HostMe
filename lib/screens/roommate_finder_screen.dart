@@ -210,7 +210,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
                                 // In "find_roommate" (you're the host), property tab is not needed.
                                 // Create a minimal placeholder House so PropertyDetailScreen can render.
                                 house = House(
-                                  id: 'tmp-${currentUserId}',
+                                  id: 'tmp-$currentUserId',
                                   userId: currentUserId,
                                   createdAt: DateTime.now(),
                                 );

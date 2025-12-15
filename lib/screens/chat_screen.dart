@@ -74,7 +74,7 @@ class _ChatScreenState extends State<ChatScreen> {
           schema: 'public',
           table: 'messages',
           callback: (payload) {
-            final msg = payload.newRecord!;
+            final msg = payload.newRecord;
 
             // Only messages for this conversation
             final sender = msg['sender_id'];

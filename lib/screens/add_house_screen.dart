@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class AddHouseScreen extends StatefulWidget {
   const AddHouseScreen({super.key});
@@ -27,6 +30,13 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   final areaController = TextEditingController();
   final floorController = TextEditingController();
   final typeController = TextEditingController();
+  final latController = TextEditingController();
+  final longController = TextEditingController();
+
+  // Location
+  GoogleMapController? _mapController;
+  LatLng? _selectedLocation;
+  Set<Marker> _markers = {};
 
   bool hasElevator = false;
   bool hasPersonalHeating = false;
@@ -63,6 +73,76 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
     await prefs.setBool(key, value);
     if (key == _kCameraConsentKey) _cameraConsent = value;
     if (key == _kGalleryConsentKey) _galleryConsent = value;
+  }
+
+  // ------------------------------
+  // LOCATION LOGIC
+  // ------------------------------
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Location services are disabled. Please enable the services')));
+      }
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location permissions are denied')));
+        }
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Location permissions are permanently denied, we cannot request permissions.')));
+      }
+      return;
+    }
+
+    final position = await Geolocator.getCurrentPosition();
+    if (!mounted) return;
+    final latLng = LatLng(position.latitude, position.longitude);
+    
+    setState(() {
+      _selectedLocation = latLng;
+      latController.text = position.latitude.toString();
+      longController.text = position.longitude.toString();
+      _markers = {
+        Marker(
+          markerId: const MarkerId('selected-location'),
+          position: latLng,
+        )
+      };
+    });
+
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15));
+  }
+
+  void _onMapTap(LatLng pos) {
+    setState(() {
+      _selectedLocation = pos;
+      latController.text = pos.latitude.toString();
+      longController.text = pos.longitude.toString();
+      _markers = {
+        Marker(
+          markerId: const MarkerId('selected-location'),
+          position: pos,
+        )
+      };
+    });
   }
 
   // ------------------------------
@@ -254,6 +334,8 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
             'has_personal_heating': hasPersonalHeating,
             'image': imageUrls,
             'number_of_current_roomates': 0,
+            'latitude': double.tryParse(latController.text),
+            'longitude': double.tryParse(longController.text),
           })
           .select('id')
           .single();
@@ -275,18 +357,20 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
         await supabase.from('profiles').update({'house_id': newHouseId}).eq('id', user.id);
       }
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Property added successfully!")),
       );
 
       // Redirect to home screen
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-      }
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
     } catch (e) {
       debugPrint('DEBUG: Error caught = $e');
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error saving: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Error saving: $e")));
+      }
     }
   }
 
@@ -313,6 +397,45 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
               _buildNumField(areaController, "Living Area (m²)"),
               _buildNumField(floorController, "Floor Number"),
               _buildTextField(typeController, "Type"),
+
+              const SizedBox(height: 20),
+
+              // MAP
+              const Text("Location", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 300,
+                child: GoogleMap(
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(44.4268, 26.1025), // Default to Bucharest
+                    zoom: 12,
+                  ),
+                  gestureRecognizers: {
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+                  onMapCreated: (controller) => _mapController = controller,
+                  onTap: _onMapTap,
+                  markers: _markers,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false, // We use custom button
+                ),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: _getCurrentLocation,
+                icon: const Icon(Icons.my_location),
+                label: const Text("Use My Current Location"),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: _buildTextField(latController, "Latitude")),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildTextField(longController, "Longitude")),
+                ],
+              ),
 
               const SizedBox(height: 20),
 
@@ -482,6 +605,9 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
     areaController.dispose();
     floorController.dispose();
     typeController.dispose();
+    latController.dispose();
+    longController.dispose();
+    // _mapController?.dispose(); // Removed to prevent web error
     super.dispose();
   }
 }
