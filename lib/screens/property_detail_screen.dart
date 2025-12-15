@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -243,23 +245,24 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
           height: 300,
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade300),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _houseLocation!,
-                zoom: 14,
-              ),
-              markers: _markers,
-              myLocationEnabled: _locationPermissionGranted,
-              myLocationButtonEnabled: true,
-              onMapCreated: (controller) {
-                _mapController = controller;
-              },
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: _houseLocation!,
+              zoom: 14,
             ),
+            markers: _markers,
+            myLocationEnabled: _locationPermissionGranted,
+            myLocationButtonEnabled: true,
+            gestureRecognizers: {
+              Factory<OneSequenceGestureRecognizer>(
+                () => EagerGestureRecognizer(),
+              ),
+            },
+            onMapCreated: (controller) {
+              _mapController = controller;
+            },
           ),
         ),
       ],

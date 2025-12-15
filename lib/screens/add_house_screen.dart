@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -409,6 +410,11 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
                     target: LatLng(44.4268, 26.1025), // Default to Bucharest
                     zoom: 12,
                   ),
+                  gestureRecognizers: {
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
                   onMapCreated: (controller) => _mapController = controller,
                   onTap: _onMapTap,
                   markers: _markers,
