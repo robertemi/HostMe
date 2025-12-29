@@ -16,8 +16,8 @@ class AppTheme {
   static const Color glassAccent1 = Color(0xFF66E0D6); // mint-cyan
   static const Color glassAccent2 = Color(0xFFF7A8D6); // soft pink
   static const Color glassAccent3 = Color(0xFF9AE6FF); // soft sky
-  static const Color glassGradientStart = Color(0xFF071622);
-  static const Color glassGradientEnd = Color(0xFF0B2530);
+  static const Color glassGradientStart = Color.fromARGB(255, 62, 188, 213);
+  static const Color glassGradientEnd = Color.fromARGB(255, 51, 130, 137);
 
   // Centralized TextTheme using Plus Jakarta Sans (mockup font)
   static final TextTheme textTheme = GoogleFonts.plusJakartaSansTextTheme();
