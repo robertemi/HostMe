@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+// foundation imports removed (no platform-gated Firebase initialization)
 import 'package:supabase_flutter/supabase_flutter.dart';
+// Firebase packages removed — app uses local notifications only
 import 'config/supabase_config.dart';
 import 'theme.dart';
 import 'widgets/liquid_glass_background.dart';
@@ -7,15 +9,22 @@ import 'package:host_me/screens/login_screen.dart';
 import 'package:host_me/screens/root_shell.dart';
 import 'package:host_me/screens/account_setup_screen.dart';
 import 'services/profile_service.dart';
+import 'services/notification_service.dart';
 
+// No Firebase initialization or background FCM handler — local notifications only
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
+
+  // Initialize notifications (local only)
+  await NotificationService().init();
+  // Request local notification permissions (Android 13+, iOS)
+  await NotificationService().requestPermissions();
   
   runApp(const MyApp());
 }

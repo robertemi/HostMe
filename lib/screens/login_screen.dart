@@ -7,6 +7,7 @@ import 'register_screen.dart';
 import 'root_shell.dart';
 import 'account_setup_screen.dart';
 import '../services/profile_service.dart';
+import '../services/notification_service.dart';
 import '../utils/notifications.dart';
 import '../widgets/parallax_tilt.dart';
 
@@ -58,6 +59,14 @@ class _LoginScreenState extends State<LoginScreen> {
             (route) => false,
           );
         } else {
+          // Schedule a reminder to complete setup if they drop off
+          await NotificationService().scheduleNotification(
+            id: 1001, // Fixed ID for onboarding reminder
+            title: "Don't forget to complete your profile!",
+            body: "Finish setting up your HostMe profile to start finding matches.",
+            delay: const Duration(hours: 24), // Remind in 24 hours
+          );
+
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const AccountSetupScreen()),
           );
