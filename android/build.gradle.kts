@@ -5,6 +5,17 @@ allprojects {
     }
 }
 
+// Add Google services classpath so we can apply the plugin in the app module.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Google services classpath removed (Firebase/FCM disabled)
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")

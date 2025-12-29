@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_service.dart';
+import '../services/notification_service.dart';
 import '../utils/notifications.dart';
 import '../models/profile_model.dart';
 import 'root_shell.dart';
@@ -227,6 +228,10 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       );
       await _profileService.upsertProfile(profile);
       if (!mounted) return;
+      
+      // Cancel the onboarding reminder
+      await NotificationService().cancelNotification(1001);
+
       // Persist succeeded — notify user and navigate into the app shell.
       await showAppSuccess(context, "You're all set!");
       // Debug: confirm navigation will be attempted
