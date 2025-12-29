@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'root_shell.dart';
 import 'account_setup_screen.dart';
+import 'forgot_password_screen.dart';
 import '../services/profile_service.dart';
 import '../utils/notifications.dart';
 import '../widgets/parallax_tilt.dart';
@@ -163,7 +164,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton(onPressed: () {}, child: Text('Forgot Password?', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: theme.colorScheme.primary))),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
+                        },
+                        child: Text('Forgot Password?', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: theme.colorScheme.primary)),
+                      ),
                     ),
 
                     const SizedBox(height: 8),
