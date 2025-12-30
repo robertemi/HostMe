@@ -82,6 +82,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       barrierDismissible: true,
       barrierLabel: 'Edit Profile',
       barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
       pageBuilder: (ctx, anim1, anim2) {
         return Material(
           type: MaterialType.transparency,
