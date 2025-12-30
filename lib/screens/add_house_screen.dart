@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -25,6 +27,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   final roomsController = TextEditingController();
   final balconiesController = TextEditingController();
   final bedroomsController = TextEditingController();
+  final roommatesController = TextEditingController();
   final bathroomsController = TextEditingController();
   final rentController = TextEditingController();
   final areaController = TextEditingController();
@@ -323,32 +326,37 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
       debugPrint('DEBUG: About to insert house with user_id = ${user.id}');
       debugPrint('DEBUG: Images to insert: ${imageUrls.length} URLs');
 
-      // Insert house and return id
-      final insertResp = await supabase
-          .from('houses')
-          .insert({
-            'user_id': user.id,
-            'address': addressController.text,
-            'number_of_rooms': int.tryParse(roomsController.text),
-            'number_of_balconies': int.tryParse(balconiesController.text),
-            'number_of_bedrooms': int.tryParse(bedroomsController.text),
-            'number_of_bathrooms': int.tryParse(bathroomsController.text),
-            'rent': double.tryParse(rentController.text),
-            'living_area': double.tryParse(areaController.text),
-            'floor_number': selectedType == 'house' ? null : int.tryParse(floorController.text),
-            'type': selectedType ?? '',
-            'has_elevator': selectedType == 'house' ? false : hasElevator,
-            'has_personal_heating': selectedType == 'house' ? false : hasPersonalHeating,
-            'has_personal_parking': hasPersonalParking,
-            'image': imageUrls,
-            'number_of_current_roomates': 0,
-            'latitude': double.tryParse(latController.text),
-            'longitude': double.tryParse(longController.text),
-          })
-          .select('id')
-          .single();
+      // Prepare house data to insert. We include both the correct column name
+      // and the legacy misspelled one to remain compatible with older DBs.
+      final houseData = <String, dynamic>{
+        'user_id': user.id,
+        'address': addressController.text,
+        'number_of_rooms': int.tryParse(roomsController.text),
+        'number_of_balconies': int.tryParse(balconiesController.text),
+        'number_of_bedrooms': int.tryParse(bedroomsController.text),
+        'number_of_bathrooms': int.tryParse(bathroomsController.text),
+        'rent': double.tryParse(rentController.text),
+        'living_area': double.tryParse(areaController.text),
+        'floor_number': selectedType == 'house' ? null : int.tryParse(floorController.text),
+        'type': selectedType ?? '',
+        'has_elevator': selectedType == 'house' ? false : hasElevator,
+        'has_personal_heating': selectedType == 'house' ? false : hasPersonalHeating,
+        'has_personal_parking': hasPersonalParking,
+        'image': imageUrls,
+        'number_of_current_roommates': int.tryParse(roommatesController.text) ?? 0,
+        'latitude': double.tryParse(latController.text),
+        'longitude': double.tryParse(longController.text),
+      };
+      final insertResp = await supabase.from('houses').insert(houseData).select('id').single();
 
       debugPrint('DEBUG: Insert response = $insertResp');
+
+      if (insertResp is Map) {
+        if (insertResp.containsKey('error') || insertResp.containsKey('message')) {
+          final err = insertResp['error'] ?? insertResp['message'];
+          throw Exception('Insert failed: ${err.toString()}');
+        }
+      }
 
       // Extract new house id robustly
       dynamic newHouseId;
@@ -373,12 +381,59 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
 
       // Redirect to home screen
       Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-    } catch (e) {
-      debugPrint('DEBUG: Error caught = $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Error saving: $e")));
-      }
+    } catch (e, st) {
+      // Format error message for display and logging
+      final msg = _formatError(e);
+      debugPrint('ERROR saving house: $msg');
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+
+      // Short snackbar for casual feedback
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving property: ${_shorten(msg)}')));
+
+      // Detailed dialog with copy-to-clipboard so the user can share the error
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Error saving property'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: SelectableText(msg),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                Clipboard.setData(ClipboardData(text: msg));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error copied to clipboard')));
+              },
+              child: const Text('Copy'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  String _shorten(String s, [int max = 120]) {
+    return (s.length <= max) ? s : '${s.substring(0, max)}...';
+  }
+
+  String _formatError(Object? e) {
+    try {
+      if (e == null) return 'Unknown error';
+      // If it's a PostgrestException (from supabase/postgrest), try to extract .message
+      // Avoid importing the PostgrestException type directly to keep compatibility.
+      final s = e.toString();
+      // Attempt to pretty-print Maps/JSON
+      if (e is Map) return const JsonEncoder.withIndent('  ').convert(e);
+      return s;
+    } catch (_) {
+      return e.toString();
     }
   }
 
@@ -437,6 +492,8 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
                     _buildNumField(roomsController, "Number of Rooms"),
                     _buildNumField(balconiesController, "Number of Balconies"),
                     _buildNumField(bedroomsController, "Number of Bedrooms"),
+                    const SizedBox(height: 8),
+                    _buildNumField(roommatesController, "Number of Current Roommates"),
                     _buildNumField(bathroomsController, "Number of Bathrooms"),
                     _buildNumField(rentController, "Rent"),
                     _buildNumField(areaController, "Living Area (m²)"),
@@ -641,7 +698,20 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   }
 
   Widget _buildNumField(TextEditingController c, String label) =>
-      _buildTextField(c, label);
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: TextFormField(
+          controller: c,
+          keyboardType: TextInputType.number,
+          decoration: _decor(label),
+          validator: (v) {
+            if (v == null || v.isEmpty) return 'Required';
+            final n = int.tryParse(v);
+            if (n == null || n < 0) return 'Enter a valid number';
+            return null;
+          },
+        ),
+      );
 
   InputDecoration _decor(String label) => InputDecoration(
         labelText: label,
@@ -661,6 +731,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
     typeController.dispose();
     latController.dispose();
     longController.dispose();
+    roommatesController.dispose();
     // _mapController?.dispose(); // Removed to prevent web error
     super.dispose();
   }
