@@ -18,4 +18,15 @@ class HouseService {
 
     return House.fromJson(response.first as Map<String, dynamic>);
   }
+
+  /// Fetch all houses from the database.
+  Future<List<House>> getAllHouses() async {
+    final List<dynamic> response = await _supabase
+        .from('houses')
+        .select();
+
+    return response
+        .map((json) => House.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
 }
