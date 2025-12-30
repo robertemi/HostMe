@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/glass_banner.dart';
 
 /// Show an animated overlay banner from the top-center. The banner fades and
@@ -63,6 +65,50 @@ Future<void> showAppSuccess(BuildContext context, String message, {Duration dura
     iconColor: Theme.of(context).colorScheme.onPrimary,
     duration: duration,
   );
+}
+
+/// Shows a detailed error dialog with the full error text and a copy button.
+/// Also displays a brief error banner for immediate feedback.
+Future<void> showAppDetailedError(BuildContext context, Object error, {String? title}) async {
+  final msg = _formatError(error);
+
+  // Show brief banner
+  await showAppError(context, title ?? 'Error', duration: const Duration(seconds: 3));
+
+  // Then show dialog with full details
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (ctx) => AlertDialog(
+      title: Text(title ?? 'Error details'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(child: SelectableText(msg)),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
+        TextButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: msg));
+            Navigator.of(ctx).pop();
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error copied to clipboard')));
+          },
+          child: const Text('Copy'),
+        ),
+      ],
+    ),
+  );
+}
+
+String _formatError(Object? e) {
+  try {
+    if (e == null) return 'Unknown error';
+    if (e is String) return e;
+    if (e is Map) return const JsonEncoder.withIndent('  ').convert(e);
+    return e.toString();
+  } catch (_) {
+    return e.toString();
+  }
 }
 
 class _AnimatedBannerOverlay extends StatefulWidget {

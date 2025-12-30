@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../services/house_service.dart';
 import '../services/matching_service.dart';
 import '../services/profile_service.dart';
+import '../utils/notifications.dart';
 import '../models/house_model.dart';
 import '../models/match_result.dart';
 import 'property_detail_screen.dart';
@@ -64,6 +65,7 @@ class _PropertyListingsScreenState extends State<PropertyListingsScreen> {
       }
     } catch (e) {
       debugPrint('Error fetching houses: $e');
+      if (mounted) await showAppDetailedError(context, e, title: 'Error fetching houses');
     }
   }
 // Handle marker tap: fetch match score and host profile, then navigate to detail screen
@@ -117,9 +119,7 @@ class _PropertyListingsScreenState extends State<PropertyListingsScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Dismiss loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading details: $e')),
-        );
+        await showAppDetailedError(context, e, title: 'Error loading details');
       }
     }
   }
@@ -190,6 +190,7 @@ class _PropertyListingsScreenState extends State<PropertyListingsScreen> {
       }
     } catch (e) {
       debugPrint('Error getting location: $e');
+      if (mounted) await showAppDetailedError(context, e, title: 'Location error');
     }
   }
 

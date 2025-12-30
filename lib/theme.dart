@@ -100,7 +100,7 @@ class AppTheme {
       primary: glassAccent1,
       secondary: glassAccent2,
       surface: Colors.white.withOpacity(0.04),
-      error: const Color(0xFFEF4444),
+      error: const Color.fromARGB(255, 255, 134, 53),
       onPrimary: Colors.black,
       onSurface: Colors.white.withOpacity(0.9),
     ),

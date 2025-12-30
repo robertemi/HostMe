@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import '../utils/notifications.dart';
 
 class AddHouseScreen extends StatefulWidget {
   const AddHouseScreen({super.key});
@@ -89,29 +90,25 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Location services are disabled. Please enable the services')));
+        await showAppError(context, 'Location services are disabled. Please enable location services.');
       }
       return;
     }
 
     permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Location permissions are denied')));
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            await showAppError(context, 'Location permissions are denied');
+          }
+          return;
         }
-        return;
       }
-    }
 
     if (permission == LocationPermission.deniedForever) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'Location permissions are permanently denied, we cannot request permissions.')));
+        await showAppError(context, 'Location permissions are permanently denied, we cannot request permissions.');
       }
       return;
     }
@@ -155,9 +152,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   Future<void> _pickImage(ImageSource source) async {
     final currentCount = kIsWeb ? webImages.length : mobileImages.length;
     if (currentCount >= maxPhotos) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("You can upload max 5 photos.")),
-      );
+      await showAppError(context, 'You can upload maximum $maxPhotos photos.');
       return;
     }
 
@@ -276,25 +271,21 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   // ------------------------------
   Future<void> _saveHouse() async {
     if (selectedType == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a Type')));
+      if (mounted) await showAppError(context, 'Please select a Type');
       return;
     }
     if (!_formKey.currentState!.validate()) return;
 
     final totalLocalImages = kIsWeb ? webImages.length : mobileImages.length;
     if (totalLocalImages == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please add at least one photo.")),
-      );
+      await showAppError(context, 'Please add at least one photo.');
       return;
     }
 
     try {
       final user = supabase.auth.currentUser;
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("You must be signed in to create a listing.")),
-        );
+        await showAppError(context, 'You must be signed in to create a listing.');
         return;
       }
 
@@ -373,10 +364,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
       }
 
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Property added successfully!")),
-      );
+      await showAppSuccess(context, 'Property added successfully!');
 
       // Redirect to home screen
       Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
@@ -388,33 +376,8 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
 
       if (!mounted) return;
 
-      // Short snackbar for casual feedback
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving property: ${_shorten(msg)}')));
-
-      // Detailed dialog with copy-to-clipboard so the user can share the error
-      showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Error saving property'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: SelectableText(msg),
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Clipboard.setData(ClipboardData(text: msg));
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error copied to clipboard')));
-              },
-              child: const Text('Copy'),
-            ),
-          ],
-        ),
-      );
+      // Show a detailed error (banner + dialog) using the centralized helper
+      await showAppDetailedError(context, e, title: 'Error saving property');
     }
   }
 
