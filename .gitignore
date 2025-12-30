@@ -54,6 +54,5 @@ package.json
 node_modules/
 .vscode/mcp.json
 android/app/src/main/AndroidManifest.xml
-web/index.html
-android/build.gradle.kts
-android/app/build.gradle.kts
+.index.html
+.build.gradle.kts
