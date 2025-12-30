@@ -11,6 +11,7 @@ import '../services/house_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_service.dart';
 import '../models/house_model.dart';
+import '../utils/notifications.dart';
 
 class RoommateFinderScreen extends StatefulWidget {
   /// The search mode: 'find_place' (user looking for a room) or 'find_roommate' (host looking for a roommate).
@@ -202,9 +203,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
                             if (house == null) {
                               if (widget.searchMode == 'find_place') {
                                 // In "find_place" mode require the host to have a listing
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("This host has no property listed.")),
-                                );
+                                await showAppError(context, 'This host has no property listed.');
                                 return;
                               } else {
                                 // In "find_roommate" (you're the host), property tab is not needed.
@@ -311,10 +310,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving swipe: $e')),
-      );
+      await showAppDetailedError(context, e, title: 'Error saving swipe');
     }
   }
 }

@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/profile_service.dart';
 import '../models/profile_model.dart';
 import '../services/feedback_service.dart';
+import '../utils/notifications.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -189,12 +190,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         this.occupation = occupation;
         _saving = false;
       });
+      if (mounted) await showAppSuccess(context, 'Profile saved');
     } catch (e) {
       setState(() => _saving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save profile: $e')),
-        );
+        await showAppDetailedError(context, e, title: 'Failed to save profile');
       }
     }
   }
@@ -258,14 +258,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   setState(() {
                     _profile = updated;
                   });
+                  await showAppSuccess(context, 'Avatar uploaded');
                 }
               }
             }
           } catch (e) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error uploading avatar: $e')),
-              );
+              await showAppDetailedError(context, e, title: 'Error uploading avatar');
             }
           } finally {
             if (mounted) setState(() => _saving = false);
@@ -275,9 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       // Handle permission errors or picker errors
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
-        );
+        await showAppDetailedError(context, e, title: 'Error picking image');
       }
     }
   }
@@ -351,11 +348,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _profile = _profile!.copyWith(interests: newInterests);
                   });
                   // Auto-save interests when changed
-                  ProfileService().upsertProfile(_profile!).catchError((e) {
+                  ProfileService().upsertProfile(_profile!).catchError((e) async {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to save interests: $e')),
-                      );
+                      await showAppDetailedError(context, e, title: 'Failed to save interests');
                     }
                   });
                 }

@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../config/feedback_config.dart';
 import '../utils/platform_utils.dart';
 import '../utils/apk_download.dart';
+import '../utils/notifications.dart';
 import '../widgets/home_screen_widgets/hero_section.dart';
 import '../widgets/home_screen_widgets/segmented_two_choice.dart';
 import '../widgets/home_screen_widgets/info_card.dart';
@@ -54,9 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error checking profile: $e')),
-        );
+        await showAppDetailedError(context, e, title: 'Error checking profile');
       }
     }
   }
@@ -131,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (apkAvailable) {
                   await openApkUrl(kApkUrl, context);
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('APK nu este încă disponibil.')));
+                  await showAppError(context, 'APK nu este încă disponibil.');
                 }
               },
             ),
