@@ -9,6 +9,7 @@ import 'account_setup_screen.dart';
 import 'forgot_password_screen.dart';
 import '../services/profile_service.dart';
 import '../services/notification_service.dart';
+import '../services/feedback_service.dart';
 import '../utils/notifications.dart';
 import '../widgets/parallax_tilt.dart';
 
@@ -55,10 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
         final userId = response.user!.id;
         final complete = await ProfileService().isProfileComplete(userId);
         if (complete) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const RootShell()),
-            (route) => false,
-          );
+                          Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (_) => const RootShell(showFeedbackOnOpen: true)),
+                              (route) => false,
+                            );
         } else {
           // Schedule a reminder to complete setup if they drop off
           await NotificationService().scheduleNotification(
@@ -201,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (response.user != null) {
                             await showAppSuccess(context, 'Google sign-in successful!');
                             Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (_) => const RootShell()),
+                              MaterialPageRoute(builder: (_) => const RootShell(showFeedbackOnOpen: true)),
                               (route) => false,
                             );
                           } else {

@@ -239,7 +239,7 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       print('[AccountSetup] profile upsert succeeded for user=${profile.id}');
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const RootShell()),
+        MaterialPageRoute(builder: (_) => const RootShell(showFeedbackOnOpen: true)),
       );
     } catch (e) {
       // ignore: avoid_print

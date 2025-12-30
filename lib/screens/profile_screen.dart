@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/profile_service.dart';
 import '../models/profile_model.dart';
+import '../services/feedback_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -87,7 +88,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 520),
-              child: EditProfileModal(
+              child: Card(
+                elevation: Theme.of(context).dialogTheme.elevation ?? 6,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                color: Theme.of(context).dialogTheme.backgroundColor,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: EditProfileModal(
           initialName: _profile?.fullName ?? '',
           initialBio: _profile?.bio ?? '',
           initialOccupation: _profile?.occupation,
@@ -120,6 +127,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+            ),
+        ),
         );
       },
     );
@@ -372,6 +381,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // --- Activity Section ---
             const ActivitySection(),
+            const SizedBox(height: 16),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () => FeedbackService.openFeedbackForm(),
+                icon: const Icon(Icons.feedback_outlined),
+                label: const Text('Send feedback'),
+              ),
+            ),
+            const SizedBox(height: 24),
             const SizedBox(height: 56),
           ],
         ),

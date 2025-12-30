@@ -15,6 +15,7 @@ class InterestsSection extends StatelessWidget {
     final controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.72),
       builder: (ctx) {
         return AlertDialog(
           title: const Text('Add interest'),
