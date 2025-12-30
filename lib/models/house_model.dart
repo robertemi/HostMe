@@ -21,6 +21,7 @@ class House {
 
   final bool? hasElevator;
   final bool? hasPersonalHeating;
+  final bool? hasPersonalParking;
 
   final int? numberOfCurrentRoommates;
 
@@ -48,6 +49,7 @@ class House {
     this.hasElevator,
     this.hasPersonalHeating,
     this.numberOfCurrentRoommates,
+    this.hasPersonalParking,
     this.image,
     this.imagePaths,
   });
@@ -77,6 +79,7 @@ class House {
 
       hasElevator: json['has_elevator'] as bool?,
       hasPersonalHeating: json['has_personal_heating'] as bool?,
+      hasPersonalParking: json['has_personal_parking'] as bool?,
 
       numberOfCurrentRoommates: json['number_of_current_roommates'] as int?,
 
@@ -112,6 +115,7 @@ class House {
 
       'has_elevator': hasElevator,
       'has_personal_heating': hasPersonalHeating,
+      'has_personal_parking': hasPersonalParking,
 
       'number_of_current_roommates': numberOfCurrentRoommates,
 
