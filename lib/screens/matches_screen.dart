@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/match_model.dart';
 import '../widgets/matches_screen_widgets/match_tile.dart';
-// bottom nav is provided by RootShell
 import 'chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
-
 
 String formatTimeAgo(DateTime time) {
   final diff = DateTime.now().difference(time);
@@ -16,7 +14,6 @@ String formatTimeAgo(DateTime time) {
   if (diff.inHours < 24) return "${diff.inHours}h ago";
   return "${diff.inDays}d ago";
 }
-
 
 DateTime _parseTime(dynamic createdAt) {
   if (createdAt is String) {
@@ -28,15 +25,14 @@ DateTime _parseTime(dynamic createdAt) {
   }
 }
 
-
 Future<List<MatchModel>> fetchMatches() async {
   final userId = supabase.auth.currentUser?.id;
   if (userId == null) return [];
 
-  // Get matches where current user is either user1 or user2
   final response = await supabase
       .from('matches')
-      .select('id, user1_id, user2_id, created_at, user1:profiles!user1_id(*), user2:profiles!user2_id(*)')
+      .select(
+          'id, user1_id, user2_id, created_at, user1:profiles!user1_id(*), user2:profiles!user2_id(*)')
       .or('user1_id.eq.$userId,user2_id.eq.$userId');
 
   if (response.isEmpty) return [];
@@ -49,13 +45,22 @@ Future<List<MatchModel>> fetchMatches() async {
       id: otherUser['id'],
       name: otherUser['full_name'] ?? 'Unknown',
       avatarUrl: otherUser['avatar_url'] ?? 'null',
-      message: '', // can fill from latest chat message later
+      message: '',
       timeAgo: formatTimeAgo(_parseTime(match['created_at'])),
       isOnline: otherUser['is_online'] ?? false,
     );
   }).toList();
 }
 
+Future<void> deleteMatch(String otherUserId) async {
+  final userId = supabase.auth.currentUser?.id;
+  if (userId == null) return;
+
+  await supabase.from('matches').delete().or(
+        'and(user1_id.eq.$userId,user2_id.eq.$otherUserId),'
+        'and(user1_id.eq.$otherUserId,user2_id.eq.$userId)',
+      );
+}
 
 class MatchesScreen extends StatefulWidget {
   const MatchesScreen({super.key});
@@ -77,14 +82,11 @@ class _MatchesScreenState extends State<MatchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Matches', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Matches',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: FutureBuilder<List<MatchModel>>(
         future: _matchesFuture,
@@ -92,32 +94,77 @@ class _MatchesScreenState extends State<MatchesScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
           final matches = snapshot.data ?? [];
-          if (matches.isEmpty) return _buildEmptyState(context);
+
+          if (matches.isEmpty) {
+            return _buildEmptyState();
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: matches.length,
             itemBuilder: (context, index) {
               final match = matches[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        receiverId: match.id,
-                        receiverName: match.name,
-                        receiverAvatar: match.avatarUrl,
+
+              return Dismissible(
+                key: ValueKey(match.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                confirmDismiss: (_) async {
+                  return await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Remove match?'),
+                      content: const Text(
+                        'This will permanently remove the match and chat.',
                       ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
-                child: MatchTile(match: match),
+                onDismissed: (_) async {
+                  await deleteMatch(match.id);
+                  setState(() {
+                    _matchesFuture = fetchMatches();
+                  });
+                },
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatScreen(
+                          receiverId: match.id,
+                          receiverName: match.name,
+                          receiverAvatar: match.avatarUrl,
+                        ),
+                      ),
+                    );
+                  },
+                  child: MatchTile(match: match),
+                ),
               );
             },
           );
@@ -126,20 +173,20 @@ class _MatchesScreenState extends State<MatchesScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
+  Widget _buildEmptyState() {
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.person_add_alt_1_outlined,
+          Icon(Icons.person_add_alt_1_outlined,
               size: 64, color: Colors.blue),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'No matches yet',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Keep exploring to find your perfect roommate!',
             style: TextStyle(color: Colors.grey),
           ),
