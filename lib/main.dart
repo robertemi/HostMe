@@ -10,7 +10,6 @@ import 'package:host_me/screens/root_shell.dart';
 import 'package:host_me/screens/account_setup_screen.dart';
 import 'services/profile_service.dart';
 import 'services/notification_service.dart';
-import 'services/feedback_service.dart';
 
 // No Firebase initialization or background FCM handler — local notifications only
 

@@ -14,7 +14,7 @@ class FeedbackService {
     _scheduled = true;
 
     final prefs = await SharedPreferences.getInstance();
-    final key = userId != null ? '$_shownKey\_$userId' : _shownKey;
+    final key = userId != null ? '${_shownKey}_$userId' : _shownKey;
     final shown = prefs.getBool(key) ?? false;
     if (shown) return;
 
@@ -52,7 +52,7 @@ class FeedbackService {
   static Future<void> showFeedbackPopupOnLogin(BuildContext context, {required String userId}) async {
     // Do not show if user previously opted out
     final prefs = await SharedPreferences.getInstance();
-    final key = '$_shownKey\_$userId';
+    final key = '${_shownKey}_$userId';
     final optedOut = prefs.getBool(key) ?? false;
     if (optedOut) return;
 

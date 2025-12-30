@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../config/supabase_config.dart';
+import 'package:flutter/foundation.dart'; // Required for kIsWeb
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -53,7 +54,8 @@ class AuthService {
   Future<AuthResponse> signInWithGoogleNative() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: '459371788165-3kn1hmf27glg6go2kjalj73md274754d.apps.googleusercontent.com',
+        serverClientId: kIsWeb ? null : '314845472230-sn5vg5d8vt17b3n49rk5ghher2q46qdd.apps.googleusercontent.com',
+        clientId: kIsWeb ? '314845472230-sn5vg5d8vt17b3n49rk5ghher2q46qdd.apps.googleusercontent.com' : null,
       );
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
