@@ -1,10 +1,8 @@
-import 'dart:io' show Platform;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();

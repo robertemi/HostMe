@@ -6,6 +6,7 @@ import '../services/notification_service.dart';
 import 'home_screen.dart';
 import 'matches_screen.dart';
 import 'profile_screen.dart';
+import 'property_listings_screen.dart';
 
 class RootShell extends StatefulWidget {
   /// [initialIndex] controls which tab is shown when the shell is first displayed.
@@ -68,9 +69,9 @@ class _RootShellState extends State<RootShell> {
           callback: (payload) {
             print('DEBUG: Received new message payload: ${payload.newRecord}');
             final msg = payload.newRecord;
-            // Don't show notification if we are on the matches screen (index 1)
+            // Don't show notification if we are on the matches screen (index 2)
             // Ideally we check if we are in the specific chat, but this is a simple check
-            if (_currentIndex != 1) {
+            if (_currentIndex != 2) {
               print('DEBUG: Showing notification for message');
               NotificationService().showNotification(
                 id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -134,6 +135,7 @@ class _RootShellState extends State<RootShell> {
         allowImplicitScrolling: true,
         children: const [
           HomeScreen(),
+          PropertyListingsScreen(),
           MatchesScreen(),
           ProfileScreen(),
         ],

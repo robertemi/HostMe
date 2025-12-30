@@ -34,7 +34,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
 
   // Map related state
   GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
   LatLng? _houseLocation;
   bool _locationPermissionGranted = false;
 
