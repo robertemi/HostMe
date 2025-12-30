@@ -8,7 +8,7 @@ class AppBottomNavBar extends StatelessWidget {
     this.pageController,
   });
 
-  final int currentIndex; // 0 = Home, 1 = Matches, 2 = Profile
+  final int currentIndex; // 0 = Home, 1 = Properties, 2 = Matches, 3 = Profile
   final ValueChanged<int> onTap;
   final PageController? pageController;
 
@@ -19,7 +19,7 @@ class AppBottomNavBar extends StatelessWidget {
         ? Colors.white70
         : Colors.grey.shade600;
 
-    // Simple opaque Material nav bar with three buttons (Home, Matches, Profile)
+    // Simple opaque Material nav bar with four buttons (Home, Properties, Matches, Profile)
     final theme = Theme.of(context);
     final navBg = theme.colorScheme.surface; // opaque surface color
 
@@ -54,8 +54,8 @@ class AppBottomNavBar extends StatelessWidget {
                   },
                 ),
                 _NavItem(
-                  icon: Icons.favorite,
-                  label: 'Matches',
+                  icon: Icons.location_on,
+                  label: 'Properties',
                   selected: currentIndex == 1,
                   active: active,
                   inactive: inactive,
@@ -68,8 +68,8 @@ class AppBottomNavBar extends StatelessWidget {
                   },
                 ),
                 _NavItem(
-                  icon: Icons.person,
-                  label: 'Profile',
+                  icon: Icons.favorite,
+                  label: 'Matches',
                   selected: currentIndex == 2,
                   active: active,
                   inactive: inactive,
@@ -78,6 +78,20 @@ class AppBottomNavBar extends StatelessWidget {
                       pageController!.jumpToPage(2);
                     } else {
                       onTap(2);
+                    }
+                  },
+                ),
+                _NavItem(
+                  icon: Icons.person,
+                  label: 'Profile',
+                  selected: currentIndex == 3,
+                  active: active,
+                  inactive: inactive,
+                  onTap: () {
+                    if (pageController != null) {
+                      pageController!.jumpToPage(3);
+                    } else {
+                      onTap(3);
                     }
                   },
                 ),
