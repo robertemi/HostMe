@@ -40,6 +40,8 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
 
   bool hasElevator = false;
   bool hasPersonalHeating = false;
+  bool hasPersonalParking = false;
+  String? selectedType;
 
   // MULTI IMAGE STORAGE (local until save)
   List<File> mobileImages = [];
@@ -271,6 +273,10 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   // SAVE LISTING (uploads images now)
   // ------------------------------
   Future<void> _saveHouse() async {
+    if (selectedType == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a Type')));
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
 
     final totalLocalImages = kIsWeb ? webImages.length : mobileImages.length;
@@ -329,10 +335,11 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
             'number_of_bathrooms': int.tryParse(bathroomsController.text),
             'rent': double.tryParse(rentController.text),
             'living_area': double.tryParse(areaController.text),
-            'floor_number': int.tryParse(floorController.text),
-            'type': typeController.text,
-            'has_elevator': hasElevator,
-            'has_personal_heating': hasPersonalHeating,
+            'floor_number': selectedType == 'house' ? null : int.tryParse(floorController.text),
+            'type': selectedType ?? '',
+            'has_elevator': selectedType == 'house' ? false : hasElevator,
+            'has_personal_heating': selectedType == 'house' ? false : hasPersonalHeating,
+            'has_personal_parking': hasPersonalParking,
             'image': imageUrls,
             'number_of_current_roomates': 0,
             'latitude': double.tryParse(latController.text),
@@ -385,115 +392,161 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
       appBar: AppBar(title: const Text('List Your Property')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildTextField(addressController, "Address"),
-              _buildNumField(roomsController, "Number of Rooms"),
-              _buildNumField(balconiesController, "Number of Balconies"),
-              _buildNumField(bedroomsController, "Number of Bedrooms"),
-              _buildNumField(bathroomsController, "Number of Bathrooms"),
-              _buildNumField(rentController, "Rent"),
-              _buildNumField(areaController, "Living Area (m²)"),
-              _buildNumField(floorController, "Floor Number"),
-              _buildTextField(typeController, "Type"),
-
-              const SizedBox(height: 20),
-
-              // MAP
-              const Text("Location", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 300,
-                child: GoogleMap(
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(44.4268, 26.1025), // Default to Bucharest
-                    zoom: 12,
+        child: Column(
+          children: [
+            // Type selection at the top
+            ButtonTheme(
+              alignedDropdown: true,
+              child: SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: DropdownButtonFormField<String>(
+                    value: selectedType,
+                    isExpanded: true,
+                    itemHeight: 56,
+                    elevation: 2,
+                    decoration: _decor('Type').copyWith(floatingLabelBehavior: FloatingLabelBehavior.always),
+                    items: const [
+                      DropdownMenuItem(value: 'apartment', child: Text('Apartment')),
+                      DropdownMenuItem(value: 'house', child: Text('House')),
+                    ],
+                    onChanged: (val) => setState(() {
+                      selectedType = val;
+                      typeController.text = val ?? '';
+                      if (val == 'house') {
+                        floorController.clear();
+                        hasElevator = false;
+                        hasPersonalHeating = false;
+                      }
+                    }),
+                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                   ),
-                  gestureRecognizers: {
-                    Factory<OneSequenceGestureRecognizer>(
-                      () => EagerGestureRecognizer(),
-                    ),
-                  },
-                  onMapCreated: (controller) => _mapController = controller,
-                  onTap: _onMapTap,
-                  markers: _markers,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false, // We use custom button
                 ),
               ),
-              const SizedBox(height: 8),
-              ElevatedButton.icon(
-                onPressed: _getCurrentLocation,
-                icon: const Icon(Icons.my_location),
-                label: const Text("Use My Current Location"),
-              ),
-              const SizedBox(height: 8),
-              Row(
+            ),
+
+            Form(
+              key: _formKey,
+              child: Column(
                 children: [
-                  Expanded(child: _buildTextField(latController, "Latitude")),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildTextField(longController, "Longitude")),
+                  // Show remaining fields only after a type is selected
+                  if (selectedType != null) ...[
+                    const SizedBox(height: 12),
+                    _buildTextField(addressController, "Address"),
+                    _buildNumField(roomsController, "Number of Rooms"),
+                    _buildNumField(balconiesController, "Number of Balconies"),
+                    _buildNumField(bedroomsController, "Number of Bedrooms"),
+                    _buildNumField(bathroomsController, "Number of Bathrooms"),
+                    _buildNumField(rentController, "Rent"),
+                    _buildNumField(areaController, "Living Area (m²)"),
+                    if (selectedType != 'house') _buildNumField(floorController, "Floor Number"),
+
+                    const SizedBox(height: 20),
+
+                    // MAP
+                    const Text("Location", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 300,
+                      child: GoogleMap(
+                        initialCameraPosition: const CameraPosition(
+                          target: LatLng(44.4268, 26.1025), // Default to Bucharest
+                          zoom: 12,
+                        ),
+                        gestureRecognizers: {
+                          Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer(),
+                          ),
+                        },
+                        onMapCreated: (controller) => _mapController = controller,
+                        onTap: _onMapTap,
+                        markers: _markers,
+                        myLocationEnabled: true,
+                        myLocationButtonEnabled: false, // We use custom button
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: _getCurrentLocation,
+                      icon: const Icon(Icons.my_location),
+                      label: const Text("Use My Current Location"),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(child: _buildTextField(latController, "Latitude")),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildTextField(longController, "Longitude")),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // MULTI IMAGE GRID
+                    _buildImageGrid(),
+
+                    const SizedBox(height: 12),
+
+                    // PICKERS
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: currentCount < maxPhotos
+                              ? () async {
+                                  final ok = await _confirmMediaAccess(context, 'camera');
+                                  if (ok) await _pickImage(ImageSource.camera);
+                                }
+                              : null,
+                          icon: const Icon(Icons.camera_alt),
+                          label: const Text("Camera"),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: currentCount < maxPhotos
+                              ? () async {
+                                  final ok = await _confirmMediaAccess(context, 'gallery');
+                                  if (ok) await _pickImage(ImageSource.gallery);
+                                }
+                              : null,
+                          icon: const Icon(Icons.photo),
+                          label: const Text("Gallery"),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    if (selectedType != 'house')
+                      SwitchListTile(
+                        value: hasElevator,
+                        onChanged: (val) => setState(() => hasElevator = val),
+                        title: const Text("Has Elevator"),
+                      ),
+                    if (selectedType != 'house')
+                      SwitchListTile(
+                        value: hasPersonalHeating,
+                        onChanged: (val) => setState(() => hasPersonalHeating = val),
+                        title: const Text("Has Personal Heating"),
+                      ),
+                    SwitchListTile(
+                      value: hasPersonalParking,
+                      onChanged: (val) => setState(() => hasPersonalParking = val),
+                      title: const Text("Has Personal Parking"),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    ElevatedButton(
+                      onPressed: _saveHouse,
+                      child: const Text("Save Property"),
+                    ),
+                  ], // end of fields shown after selecting type
                 ],
               ),
-
-              const SizedBox(height: 20),
-
-              // MULTI IMAGE GRID
-              _buildImageGrid(),
-
-              const SizedBox(height: 12),
-
-              // PICKERS
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: currentCount < maxPhotos
-                        ? () async {
-                            final ok = await _confirmMediaAccess(context, 'camera');
-                            if (ok) await _pickImage(ImageSource.camera);
-                          }
-                        : null,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text("Camera"),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: currentCount < maxPhotos
-                        ? () async {
-                            final ok = await _confirmMediaAccess(context, 'gallery');
-                            if (ok) await _pickImage(ImageSource.gallery);
-                          }
-                        : null,
-                    icon: const Icon(Icons.photo),
-                    label: const Text("Gallery"),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              SwitchListTile(
-                value: hasElevator,
-                onChanged: (val) => setState(() => hasElevator = val),
-                title: const Text("Has Elevator"),
-              ),
-              SwitchListTile(
-                value: hasPersonalHeating,
-                onChanged: (val) => setState(() => hasPersonalHeating = val),
-                title: const Text("Has Personal Heating"),
-              ),
-
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: _saveHouse,
-                child: const Text("Save Property"),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
