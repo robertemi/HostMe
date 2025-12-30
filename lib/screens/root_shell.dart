@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/feedback_service.dart';
 import '../widgets/common/app_bottom_nav_bar.dart';
 import '../services/notification_service.dart';
 import 'home_screen.dart';
@@ -9,9 +10,11 @@ import 'profile_screen.dart';
 class RootShell extends StatefulWidget {
   /// [initialIndex] controls which tab is shown when the shell is first displayed.
   /// Defaults to 0 (Home).
-  const RootShell({super.key, this.initialIndex = 0});
+  const RootShell({super.key, this.initialIndex = 0, this.showFeedbackOnOpen = false});
 
   final int initialIndex;
+  /// If true, show the feedback popup shortly after the shell opens.
+  final bool showFeedbackOnOpen;
 
   @override
   State<RootShell> createState() => _RootShellState();
@@ -32,6 +35,16 @@ class _RootShellState extends State<RootShell> {
     NotificationService().requestPermissions();
     
     _setupRealtimeListeners();
+
+    if (widget.showFeedbackOnOpen) {
+      Future.delayed(const Duration(seconds: 5), () async {
+        if (!mounted) return;
+        final userId = _supabase.auth.currentUser?.id;
+        if (userId != null) {
+          await FeedbackService.showFeedbackPopupOnLogin(context, userId: userId);
+        }
+      });
+    }
   }
 
   void _setupRealtimeListeners() {

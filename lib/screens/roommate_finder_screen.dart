@@ -289,6 +289,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       if (isMutualMatch && mounted) {
         showDialog(
           context: context,
+          barrierColor: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.72),
           builder: (context) => AlertDialog(
             title: const Text('It\'s a Match! 🎉'),
             content: Text('You and ${match.fullName} liked each other!'),

@@ -84,6 +84,13 @@ class AppTheme {
       titleTextStyle: textTheme.titleLarge?.copyWith(color: Colors.white),
       iconTheme: const IconThemeData(color: Colors.white),
     ),
+    dialogTheme: DialogThemeData(
+      // Make dialog cards fully opaque for maximum readability on light theme
+      backgroundColor: Colors.white,
+      elevation: 6,
+      titleTextStyle: textTheme.titleLarge?.copyWith(color: Colors.black87),
+      contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.black87),
+    ),
   );
 
   // Glassmorphism / liquid-glass themed dark theme
@@ -130,6 +137,13 @@ class AppTheme {
       elevation: 0,
       titleTextStyle: textTheme.titleLarge?.copyWith(color: Colors.white),
       iconTheme: const IconThemeData(color: Colors.white),
+    ),
+    dialogTheme: DialogThemeData(
+      // Increase opacity on glass theme dialogs so text is clearer
+      backgroundColor: Colors.black.withOpacity(0.90),
+      elevation: 4,
+      titleTextStyle: textTheme.titleLarge?.copyWith(color: Colors.white),
+      contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white70),
     ),
     cardColor: Colors.white.withOpacity(0.035),
     dividerColor: Colors.white12,

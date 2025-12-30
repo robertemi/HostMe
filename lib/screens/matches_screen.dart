@@ -79,12 +79,6 @@ class _MatchesScreenState extends State<MatchesScreen> {
       appBar: AppBar(
         title: const Text('Matches', style: TextStyle(fontWeight: FontWeight.w600)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: FutureBuilder<List<MatchModel>>(
         future: _matchesFuture,

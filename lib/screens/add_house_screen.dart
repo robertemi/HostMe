@@ -186,6 +186,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
     bool remember = false;
     final result = await showDialog<bool>(
       context: ctx,
+      barrierColor: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.72),
       builder: (context) {
         return StatefulBuilder(builder: (context, setStateSB) {
           return AlertDialog(
