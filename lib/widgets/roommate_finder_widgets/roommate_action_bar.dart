@@ -4,12 +4,10 @@ class RoommateActionBar extends StatelessWidget {
   const RoommateActionBar({
     super.key,
     required this.onNope,
-    required this.onSuperLike,
     required this.onLike,
   });
 
   final VoidCallback onNope;
-  final VoidCallback onSuperLike;
   final VoidCallback onLike;
 
   @override
@@ -31,15 +29,6 @@ class RoommateActionBar extends StatelessWidget {
             surface: surface,
             padding: const EdgeInsets.all(16),
             onTap: onNope,
-          ),
-          _ActionColumnButton(
-            label: 'Super Like',
-            icon: Icons.star,
-            iconSize: 24,
-            color: const Color(0xFFF39C12),
-            surface: surface,
-            padding: const EdgeInsets.all(12),
-            onTap: onSuperLike,
           ),
           _ActionColumnButton(
             label: 'Like',

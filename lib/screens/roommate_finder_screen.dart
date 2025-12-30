@@ -258,9 +258,6 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
 
         RoommateActionBar(
           onNope: () => _triggerSwipe(false),
-          onSuperLike: () {
-            // TODO: Handle "Super Like"
-          },
           onLike: () => _triggerSwipe(true),
         ),
         const SizedBox(height: 12),

@@ -194,8 +194,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
 
           const SizedBox(height: 20),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _infoChip("Rooms", house.numberOfRooms),
               _infoChip("Bedrooms", house.numberOfBedrooms),
@@ -204,15 +205,15 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
           ),
           const SizedBox(height: 12),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _infoChip("Balconies", house.numberOfBalconies),
               _infoChip("Floor", house.floorNumber),
               _infoChip("Type", house.type),
             ],
           ),
-
           const SizedBox(height: 20),
           _booleanInfo("Has Elevator", house.hasElevator),
           _booleanInfo("Personal Heating", house.hasPersonalHeating),

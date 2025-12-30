@@ -115,7 +115,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 24),
               Center(
                 child: TextButton(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ResetPasswordScreen())),
+                  onPressed: () {
+                    final email = _emailCtrl.text.trim();
+
+                    if (email.isEmpty) {
+                      // optional: show error/snackbar
+                      return;
+                    }
+
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ResetPasswordScreen(email: email),
+                      ),
+                    );
+                  },
                   child: const Text('Open Reset Screen (paste token)'),
                 ),
               ),

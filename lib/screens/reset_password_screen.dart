@@ -5,65 +5,45 @@ import 'package:http/http.dart' as http;
 import '../config/supabase_config.dart';
 import 'login_screen.dart';
 
-// // For mobile deep links we'll use `uni_links`. This import is optional on web.
-// // Add `uni_links` in pubspec.yaml and platform setup for Android/iOS.
-// import 'package:uni_links/uni_links.dart';
-
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  final String email;
+
+  const ResetPasswordScreen({
+    super.key,
+    required this.email,
+  });
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final _tokenCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _passwordConfirmCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _tokenCtrl = TextEditingController();
-  String? _token;
+
+  bool _showPassword = false;
   bool _isLoading = false;
   bool _isSuccess = false;
   String? _message;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-  // No automatic URL parsing. Users must paste the token from the email.
-
   Future<void> _submit() async {
+    final token = _tokenCtrl.text.trim();
     final pass = _passwordCtrl.text;
     final pass2 = _passwordConfirmCtrl.text;
-    if (pass.isEmpty || pass2.isEmpty) {
-      setState(() => _message = 'Please enter a new password and confirm it.');
+
+    if (token.isEmpty || token.length != 6) {
+      setState(() => _message = 'Please enter the 6-digit code from your email.');
       return;
     }
+
+    if (pass.isEmpty || pass2.isEmpty) {
+      setState(() => _message = 'Please enter and confirm your new password.');
+      return;
+    }
+
     if (pass != pass2) {
       setState(() => _message = 'Passwords do not match.');
-      return;
-    }
-    // prefer manual token field if provided
-    final usedToken = (_tokenCtrl.text.isNotEmpty) ? _tokenCtrl.text : (_token ?? '');
-    if (usedToken.trim().isEmpty) {
-      setState(() => _message = 'Missing reset token. Paste the token from the email.');
-      return;
-    }
-
-    // Normalize token: only trim surrounding whitespace and remove internal newlines/spaces.
-    // No URL/fragment parsing or percent-decoding — user must paste the clean token.
-    String normalized = usedToken.trim();
-    // Remove whitespace and common invisible characters (zero-width spaces, BOM) which may be present
-    normalized = normalized.replaceAll(RegExp(r'\s+'), '');
-    normalized = normalized.replaceAll(RegExp(r'[\u200B\u200C\u200D\uFEFF]'), '');
-
-    // OTP: 6-digit numeric code (e.g. "123456")
-    final isOtp = RegExp(r'^\d{6}$').hasMatch(normalized);
-    final isJwt = normalized.split('.').length == 3;
-
-    if (!isOtp && !isJwt) {
-      final cp = normalized.runes.map((r) => r.toRadixString(16).padLeft(2, '0')).join(' ');
-      setState(() => _message = 'Token looks invalid. Normalized: "$normalized" (len=${normalized.length})\ncodepoints: $cp');
       return;
     }
 
@@ -73,90 +53,58 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     });
 
     try {
-      if (isOtp) {
-        // OTP flow (recovery): require email and call the REST /verify endpoint to exchange the 6-digit code
-        // for an access token, then use that access token to update the user's password.
-        final email = _emailCtrl.text.trim();
-        if (email.isEmpty) {
-          setState(() => _message = 'Please enter the email associated with this account.');
-          return;
-        }
+      final verifyUrl =
+          Uri.parse('${SupabaseConfig.supabaseUrl}/auth/v1/verify');
 
-        final verifyUrl = Uri.parse('${SupabaseConfig.supabaseUrl}/auth/v1/verify');
-        final verifyResp = await http.post(
-          verifyUrl,
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SupabaseConfig.supabaseAnonKey,
-          },
-          body: jsonEncode({'type': 'recovery', 'token': normalized, 'email': email}),
-        );
+      final verifyResp = await http.post(
+        verifyUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SupabaseConfig.supabaseAnonKey,
+        },
+        body: jsonEncode({
+          'type': 'recovery',
+          'token': token,
+          'email': widget.email,
+        }),
+      );
 
-        if (verifyResp.statusCode != 200) {
-          setState(() => _message = 'Failed to verify token: ${verifyResp.statusCode} ${verifyResp.body}');
-          return;
-        }
+      if (verifyResp.statusCode != 200) {
+        setState(() => _message = 'Invalid or expired reset code.');
+        return;
+      }
 
-        final verified = jsonDecode(verifyResp.body) as Map<String, dynamic>;
-        final accessToken = verified['access_token'] as String?;
-        if (accessToken == null || accessToken.isEmpty) {
-          setState(() => _message = 'Failed to verify token: no access token returned.');
-          return;
-        }
+      final verified = jsonDecode(verifyResp.body) as Map<String, dynamic>;
+      final accessToken = verified['access_token'] as String?;
 
-        // Use the returned access token to PUT /auth/v1/user and change the password
-        final url = Uri.parse('${SupabaseConfig.supabaseUrl}/auth/v1/user');
-        final resp = await http.put(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SupabaseConfig.supabaseAnonKey,
-            'Authorization': 'Bearer $accessToken',
-          },
-          body: jsonEncode({'password': pass}),
-        );
+      if (accessToken == null || accessToken.isEmpty) {
+        setState(() => _message = 'Failed to authenticate reset request.');
+        return;
+      }
 
-        if (resp.statusCode == 200) {
-          setState(() {
-            _isSuccess = true;
-            _message = 'Password updated. You can now login with your new password.';
-          });
-        } else {
-          setState(() {
-            _isSuccess = false;
-            _message = 'Failed to update password: ${resp.statusCode} ${resp.body}';
-          });
-        }
+      final updateUrl =
+          Uri.parse('${SupabaseConfig.supabaseUrl}/auth/v1/user');
+
+      final updateResp = await http.put(
+        updateUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SupabaseConfig.supabaseAnonKey,
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({'password': pass}),
+      );
+
+      if (updateResp.statusCode == 200) {
+        setState(() {
+          _isSuccess = true;
+          _message = 'Password updated successfully.';
+        });
       } else {
-        // JWT flow: existing behavior — put /auth/v1/user with the access token
-        final url = Uri.parse('${SupabaseConfig.supabaseUrl}/auth/v1/user');
-        final resp = await http.put(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SupabaseConfig.supabaseAnonKey,
-            'Authorization': 'Bearer $normalized',
-          },
-          body: jsonEncode({'password': pass}),
-        );
-
-        if (resp.statusCode == 200) {
-          setState(() {
-            _isSuccess = true;
-            _message = 'Password updated. You can now login with your new password.';
-          });
-        } else {
-          setState(() {
-            _isSuccess = false;
-            _message = 'Failed to update password: ${resp.statusCode} ${resp.body}';
-          });
-        }
+        setState(() => _message = 'Failed to update password.');
       }
     } catch (e) {
-      setState(() {
-        _isSuccess = false;
-        _message = 'Error: $e';
-      });
+      setState(() => _message = 'Error: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -164,73 +112,127 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   void dispose() {
+    _tokenCtrl.dispose();
     _passwordCtrl.dispose();
     _passwordConfirmCtrl.dispose();
-    _emailCtrl.dispose();
-    _tokenCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text('Set New Password')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Enter the email (if you received a 6-digit code), the reset token (from email) and your new password'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _emailCtrl,
-              decoration: const InputDecoration(labelText: 'Email (required for 6-digit code)'),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _tokenCtrl,
-              decoration: const InputDecoration(labelText: 'Reset token (paste here)'),
-            ),
-            const SizedBox(height: 12),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'New password'),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _passwordConfirmCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Confirm password'),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                child: _isLoading ? const CircularProgressIndicator() : const Text('Set password'),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Enter the 6-digit code sent to your email and choose a new password.',
               ),
-            ),
-            if (_message != null) ...[
               const SizedBox(height: 16),
-              Text(_message!),
-            ],
-            if (_isSuccess) ...[
-              const SizedBox(height: 24),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                    );
-                  },
-                  child: const Text('Back to Login'),
+
+              // Reset code
+              TextField(
+                controller: _tokenCtrl,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: '6-digit reset code',
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // New password
+              TextField(
+                controller: _passwordCtrl,
+                obscureText: !_showPassword,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  labelText: 'New password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _showPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _showPassword = !_showPassword;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Confirm password
+              TextField(
+                controller: _passwordConfirmCtrl,
+                obscureText: !_showPassword,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  labelText: 'Confirm password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _showPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _showPassword = !_showPassword;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Set password'),
+                ),
+              ),
+
+              if (_message != null) ...[
+                const SizedBox(height: 16),
+                Text(_message!),
+              ],
+
+              if (_isSuccess) ...[
+                const SizedBox(height: 24),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => const LoginScreen(),
+                        ),
+                        (_) => false,
+                      );
+                    },
+                    child: const Text('Back to Login'),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
