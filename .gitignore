@@ -54,3 +54,4 @@ node_modules/
 android/app/src/main/AndroidManifest.xml
 .index.html
 .build.gradle.kts
+build/
