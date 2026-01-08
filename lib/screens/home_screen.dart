@@ -121,19 +121,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          if (shouldShowApkButton)
-            IconButton(
-              tooltip: 'Descarcă APK',
-              icon: const Icon(Icons.android, color: Colors.white),
-              onPressed: () async {
-                final apkAvailable = !(kApkUrl.contains('your.site') || kApkUrl.trim().isEmpty);
-                if (apkAvailable) {
-                  await openApkUrl(kApkUrl, context);
-                } else {
-                  await showAppError(context, 'APK nu este încă disponibil.');
-                }
-              },
-            ),
+          IconButton(
+            tooltip: 'Descarcă APK',
+            icon: const Icon(Icons.android, color: Colors.white),
+            onPressed: () async {
+              if (!isWebAndroid) {
+                await showAppError(context, 'Descărcarea APK este disponibilă doar pe Android (în browser).');
+                return;
+              }
+
+              final apkAvailable = !(kApkUrl.contains('your.site') || kApkUrl.trim().isEmpty);
+              if (apkAvailable) {
+                await openApkUrl(kApkUrl, context);
+              } else {
+                await showAppError(context, 'APK nu este încă disponibil.');
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {

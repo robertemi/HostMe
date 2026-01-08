@@ -11,6 +11,7 @@ class PropertyDetailScreen extends StatefulWidget {
   final House house;
   final MatchResult host;
   final bool hidePropertyTab;
+  final bool hideHostProfileTab;
   final ProfileModel? hostProfile;
 
   const PropertyDetailScreen({
@@ -19,6 +20,7 @@ class PropertyDetailScreen extends StatefulWidget {
     this.hostProfile,
     required this.host,
     this.hidePropertyTab = false,
+    this.hideHostProfileTab = false,
   });
 
   @override
@@ -58,8 +60,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
     }
     _checkLocationPermission();
 
-    // Only create 1 tab if hiding property tab, otherwise 2
-    final tabCount = widget.hidePropertyTab ? 1 : 2;
+    // Only create 1 tab if hiding either tab, otherwise 2
+    final tabCount = (widget.hidePropertyTab || widget.hideHostProfileTab) ? 1 : 2;
     _tabController = TabController(length: tabCount, vsync: this);
   }
 
@@ -103,10 +105,12 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.hidePropertyTab 
-            ? (hostProfile?.fullName ?? host.fullName ?? "Profile")
-            : (house.address ?? "Property")),
-        bottom: widget.hidePropertyTab
+        title: Text(
+          widget.hidePropertyTab
+              ? (hostProfile?.fullName ?? host.fullName ?? "Profile")
+              : (house.address ?? "Property"),
+        ),
+        bottom: (widget.hidePropertyTab || widget.hideHostProfileTab)
             ? null
             : TabBar(
                 controller: _tabController,
@@ -118,13 +122,15 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
       ),
       body: widget.hidePropertyTab
           ? _buildHostProfileTab()
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPropertyTab(),
-                _buildHostProfileTab(),
-              ],
-            ),
+          : (widget.hideHostProfileTab
+              ? _buildPropertyTab()
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildPropertyTab(),
+                    _buildHostProfileTab(),
+                  ],
+                )),
     );
   }
 
