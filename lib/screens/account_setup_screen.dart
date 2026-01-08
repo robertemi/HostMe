@@ -173,6 +173,9 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
   }
 
   void _next() {
+    if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
+      return;
+    }
     if (_step < _totalSteps - 1) {
       setState(() => _step++);
     }
@@ -338,30 +341,36 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 160,
+                  width: 130,
                   child: DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: _countryCode,
                     items: _countries
                         .map((c) => DropdownMenuItem(
                               value: c['code'],
-                              child: Text('${c['name']} (${c['code']})'),
+                              child: Text(
+                                '${c['name']} (${c['code']})',
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ))
                         .toList(),
                     onChanged: (v) => setState(() => _countryCode = v ?? '+1'),
                   ),
                 ),
                 const SizedBox(width: 12),
-                SizedBox(
-                  width: 260,
+                Expanded(
                   child: TextFormField(
                     controller: _phoneCtrl,
                     keyboardType: TextInputType.phone,
                     textAlign: TextAlign.center,
                     decoration: const InputDecoration(hintText: 'Phone Number'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (!RegExp(r'^\d+$').hasMatch(v.trim())) return 'Digits only';
+                      return null;
+                    },
                   ),
                 ),
               ],
@@ -406,27 +415,39 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  width: 200,
+                Expanded(
                   child: TextFormField(
                     controller: _budgetMinCtrl,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     decoration: const InputDecoration(hintText: 'Min'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (int.tryParse(v.trim()) == null) return 'Invalid';
+                      return null;
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
-                SizedBox(
-                  width: 200,
+                Expanded(
                   child: TextFormField(
                     controller: _budgetMaxCtrl,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     decoration: const InputDecoration(hintText: 'Max'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (int.tryParse(v.trim()) == null) return 'Invalid';
+                      if (_budgetMinCtrl.text.isNotEmpty) {
+                        final min = int.tryParse(_budgetMinCtrl.text.trim());
+                        final max = int.tryParse(v.trim());
+                        if (min != null && max != null && max < min) {
+                          return 'Min > Max';
+                        }
+                      }
+                      return null;
+                    },
                   ),
                 ),
               ],
