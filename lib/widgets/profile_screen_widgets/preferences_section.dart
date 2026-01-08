@@ -1,30 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common/labeled_slider.dart';
 
 class PreferencesSection extends StatelessWidget {
   final double cleanlinessLevel;
-  final ValueChanged<double> onCleanlinessChanged;
   final double noiseLevel;
-  final ValueChanged<double> onNoiseChanged;
   final double budgetLevel;
-  final ValueChanged<double> onBudgetChanged;
   final bool smoking;
-  final ValueChanged<bool> onSmokingChanged;
   final bool pets;
-  final ValueChanged<bool> onPetsChanged;
 
   const PreferencesSection({
     super.key,
     required this.cleanlinessLevel,
-    required this.onCleanlinessChanged,
     required this.noiseLevel,
-    required this.onNoiseChanged,
     required this.budgetLevel,
-    required this.onBudgetChanged,
     required this.smoking,
-    required this.onSmokingChanged,
     required this.pets,
-    required this.onPetsChanged
   });
 
   @override
@@ -43,13 +32,10 @@ class PreferencesSection extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Budget slider
-            const Text('Budget'),
-            LabeledSlider(
-              min: 1,
-              max: 5,
+            _buildPreferenceDisplay(
+              context,
+              title: 'Budget',
               value: budgetLevel,
-              onChanged: onBudgetChanged,
               labels: const [
                 'Under €100',
                 '€100-€300',
@@ -57,17 +43,15 @@ class PreferencesSection extends StatelessWidget {
                 '€500-€1000',
                 'Over €1000',
               ],
+              color: Colors.green,
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Cleanliness slider
-            const Text('Cleanliness'),
-            LabeledSlider(
-              min: 1,
-              max: 5,
+            _buildPreferenceDisplay(
+              context,
+              title: 'Cleanliness',
               value: cleanlinessLevel,
-              onChanged: onCleanlinessChanged,
               labels: const [
                 'Very Messy',
                 'Messy',
@@ -75,17 +59,15 @@ class PreferencesSection extends StatelessWidget {
                 'Tidy',
                 'Very Tidy',
               ],
+              color: Colors.blue,
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Noise slider
-            const Text('Noise Level'),
-            LabeledSlider(
-              min: 1,
-              max: 5,
+            _buildPreferenceDisplay(
+              context,
+              title: 'Noise Level',
               value: noiseLevel,
-              onChanged: onNoiseChanged,
               labels: const [
                 'Very Quiet',
                 'Quiet',
@@ -93,31 +75,91 @@ class PreferencesSection extends StatelessWidget {
                 'Lively',
                 'Very Loud',
               ],
+              color: Colors.orange,
             ),
 
             const SizedBox(height: 24),
 
             // Toggles
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Row(
-                  children: [
-                    const Text('Smoking'),
-                    Switch(value: smoking, onChanged: onSmokingChanged),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Text('Pets'),
-                    Switch(value: pets, onChanged: onPetsChanged),
-                  ],
-                ),
+                _buildBooleanDisplay(context, 'Smoking', smoking),
+                _buildBooleanDisplay(context, 'Pets', pets),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPreferenceDisplay(
+    BuildContext context, {
+    required String title,
+    required double value,
+    required List<String> labels,
+    required Color color,
+  }) {
+    // Ensure index is within range [0, 4]
+    final int index = (value.round() - 1).clamp(0, labels.length - 1);
+    final String label = labels[index];
+    // value 1..5 -> normalized 0.2..1.0
+    final double normalizedValue = value / 5.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(1.0),
+                  fontSize: 13),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: normalizedValue,
+            backgroundColor: color.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBooleanDisplay(BuildContext context, String title, bool value) {
+    return Column(
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(
+              value ? Icons.check_circle_outline : Icons.highlight_off,
+              color: value ? Colors.green : Colors.red,
+              size: 20,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              value ? "Allowed" : "No",
+              style: TextStyle(
+                  fontSize: 14,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(1.0)),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
