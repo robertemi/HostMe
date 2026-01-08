@@ -372,15 +372,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // --- Preferences ---
             PreferencesSection(
               budgetLevel: budget,
-              onBudgetChanged: (v) => setState(() => budget = v),
               cleanlinessLevel: cleanliness,
-              onCleanlinessChanged: (v) => setState(() => cleanliness = v),
               noiseLevel: noise,
-              onNoiseChanged: (v) => setState(() => noise = v),
               smoking: smoking,
-              onSmokingChanged: (v) => setState(() => smoking = v),
               pets: pets,
-              onPetsChanged: (v) => setState(() => pets = v)
             ),
 
             const SizedBox(height: 28),
