@@ -71,9 +71,6 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       appBar: SimpleTopBar(
         title: 'Smart Match',
         onLeadingTap: () => Navigator.pop(context),
-        onTrailingTap: () {
-          // TODO: Open filters
-        },
       ),
       body: SafeArea(
         top: false,
