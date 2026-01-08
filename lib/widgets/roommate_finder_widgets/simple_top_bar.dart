@@ -48,11 +48,15 @@ class SimpleTopBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: onTrailingTap,
-            icon: Icon(trailingIcon, color: textColor, size: 24),
-            tooltip: 'Trailing',
-          ),
+          // Only show trailing button if a handler was provided
+          if (onTrailingTap != null)
+            IconButton(
+              onPressed: onTrailingTap,
+              icon: Icon(trailingIcon, color: textColor, size: 24),
+              tooltip: 'Trailing',
+            )
+          else
+            const SizedBox(width: 48),
         ],
       ),
     );

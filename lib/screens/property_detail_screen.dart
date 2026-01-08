@@ -3,9 +3,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/house_model.dart';
 import '../models/match_result.dart';
 import '/models/profile_model.dart';
+import '../services/house_service.dart';
+import '../utils/notifications.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final House house;
@@ -34,6 +38,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
   late MatchResult host;
   ProfileModel? hostProfile;
 
+  late final PageController _photoCtrl;
+  int _photoIndex = 0;
+  List<String> _photos = [];
+
   // Map related state
   GoogleMapController? _mapController;
   final Set<Marker> _markers = {};
@@ -46,6 +54,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
     house = widget.house;
     host = widget.host;
     hostProfile = widget.hostProfile;
+
+    _photos = List<String>.from(
+      house.imagePaths ?? (house.image != null ? [house.image!] : const []),
+    );
+    _photoCtrl = PageController();
 
     // Initialize map data
     if (house.latitude != null && house.longitude != null) {
@@ -63,6 +76,90 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
     // Only create 1 tab if hiding either tab, otherwise 2
     final tabCount = (widget.hidePropertyTab || widget.hideHostProfileTab) ? 1 : 2;
     _tabController = TabController(length: tabCount, vsync: this);
+  }
+
+  bool get _isOwner {
+    final user = Supabase.instance.client.auth.currentUser;
+    return user != null && user.id == house.userId;
+  }
+
+  Future<void> _addPhotos() async {
+    if (!_isOwner) return;
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    const maxPhotos = 5;
+    final remaining = maxPhotos - _photos.length;
+    if (remaining <= 0) {
+      await showAppError(context, 'You can add up to $maxPhotos photos.');
+      return;
+    }
+
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickMultiImage();
+      if (picked.isEmpty) return;
+
+      final files = picked.take(remaining).toList();
+      final houseService = HouseService();
+      final newUrls = <String>[];
+
+      for (final f in files) {
+        final url = await houseService.uploadHousePhoto(userId: user.id, file: f);
+        newUrls.add(url);
+      }
+
+      final updated = [..._photos, ...newUrls];
+      await houseService.updateHousePhotoUrls(houseId: house.id, userId: user.id, urls: updated);
+
+      if (!mounted) return;
+      setState(() {
+        _photos = updated;
+      });
+      await showAppSuccess(context, 'Photos updated');
+    } catch (e) {
+      if (!mounted) return;
+      await showAppDetailedError(context, e, title: 'Failed to add photos');
+    }
+  }
+
+  Future<void> _deleteCurrentPhoto() async {
+    if (!_isOwner) return;
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    if (_photos.isEmpty) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete photo?'),
+        content: const Text('This will remove the photo from the listing.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final updated = List<String>.from(_photos)..removeAt(_photoIndex.clamp(0, _photos.length - 1));
+      await HouseService().updateHousePhotoUrls(houseId: house.id, userId: user.id, urls: updated);
+
+      if (!mounted) return;
+      setState(() {
+        _photos = updated;
+        if (_photoIndex >= _photos.length) {
+          _photoIndex = (_photos.isEmpty) ? 0 : _photos.length - 1;
+        }
+      });
+      await showAppSuccess(context, 'Photo deleted');
+    } catch (e) {
+      if (!mounted) return;
+      await showAppDetailedError(context, e, title: 'Failed to delete photo');
+    }
   }
 
   Future<void> _checkLocationPermission() async {
@@ -126,6 +223,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
               ? _buildPropertyTab()
               : TabBarView(
                   controller: _tabController,
+                  physics: const NeverScrollableScrollPhysics(),
                   children: [
                     _buildPropertyTab(),
                     _buildHostProfileTab(),
@@ -154,10 +252,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
   }
 
   Widget _photoCarousel() {
-    final List<String> photos =
-        house.imagePaths ?? (house.image != null ? [house.image!] : []);
-
-    if (photos.isEmpty) {
+    if (_photos.isEmpty) {
       return Container(
         height: 260,
         color: Colors.grey.shade300,
@@ -167,14 +262,87 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
 
     return SizedBox(
       height: 260,
-      child: PageView.builder(
-        itemCount: photos.length,
-        itemBuilder: (_, index) => Image.network(
-          photos[index],
-          fit: BoxFit.cover,
-        ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: PageView.builder(
+              controller: _photoCtrl,
+              itemCount: _photos.length,
+              onPageChanged: (i) => setState(() => _photoIndex = i),
+              itemBuilder: (_, index) => Image.network(
+                _photos[index],
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.grey.shade300,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.broken_image, size: 40),
+                ),
+              ),
+            ),
+          ),
+
+          // Dots
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 8,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.35),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(_photos.length, (i) {
+                    final active = i == _photoIndex;
+                    return Container(
+                      width: active ? 10 : 6,
+                      height: 6,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        color: active ? Colors.white : Colors.white70,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ),
+
+          // Owner actions
+          if (_isOwner)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Row(
+                children: [
+                  _PhotoActionButton(
+                    icon: Icons.add_photo_alternate_outlined,
+                    tooltip: 'Add photos',
+                    onTap: _addPhotos,
+                  ),
+                  const SizedBox(width: 8),
+                  _PhotoActionButton(
+                    icon: Icons.delete_outline,
+                    tooltip: 'Delete photo',
+                    onTap: _deleteCurrentPhoto,
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _photoCtrl.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 
   Widget _infoSection() {
@@ -437,6 +605,37 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Chip(label: Text("$label: $value")),
+    );
+  }
+}
+
+class _PhotoActionButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _PhotoActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withOpacity(0.45),
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Tooltip(
+            message: tooltip,
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+        ),
+      ),
     );
   }
 }

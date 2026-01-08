@@ -188,7 +188,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
           SizedBox(height: 8),
           Text(
             'Keep exploring to find your perfect roommate!',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Colors.white),
           ),
         ],
       ),

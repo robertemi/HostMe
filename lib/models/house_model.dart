@@ -58,10 +58,22 @@ class House {
   // FROM JSON
   // -----------------------------
   factory House.fromJson(Map<String, dynamic> json) {
+    final parsedImagePaths = _parseImagePaths(json['image_path']) ?? _parseImagePaths(json['image']);
+
+    final idRaw = json['id'];
+    final userIdRaw = json['user_id'];
+    if (idRaw == null) {
+      throw const FormatException("House row is missing required field 'id'.");
+    }
+    if (userIdRaw == null) {
+      throw const FormatException("House row is missing required field 'user_id'.");
+    }
+
+    final createdAt = _parseDateTime(json['created_at']) ?? DateTime.now();
     return House(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      createdAt: DateTime.parse(json['created_at']),
+      id: idRaw.toString(),
+      userId: userIdRaw.toString(),
+      createdAt: createdAt,
 
       address: json['address'] as String?,
       numberOfRooms: json['number_of_rooms'] as int?,
@@ -86,8 +98,15 @@ class House {
       image: _parseSingleImage(json['image']),
 
       // Convert comma-separated or JSON array to List<String>
-      imagePaths: _parseImagePaths(json['image_path']),
+      imagePaths: parsedImagePaths,
     );
+  }
+
+  static DateTime? _parseDateTime(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is DateTime) return raw;
+    if (raw is String) return DateTime.tryParse(raw);
+    return DateTime.tryParse(raw.toString());
   }
 
   // -----------------------------

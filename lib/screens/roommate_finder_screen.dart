@@ -71,9 +71,6 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       appBar: SimpleTopBar(
         title: 'Smart Match',
         onLeadingTap: () => Navigator.pop(context),
-        onTrailingTap: () {
-          // TODO: Open filters
-        },
       ),
       body: SafeArea(
         top: false,
@@ -257,9 +254,6 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
 
         RoommateActionBar(
           onNope: () => _triggerSwipe(false),
-          onSuperLike: () {
-            // TODO: Handle "Super Like"
-          },
           onLike: () => _triggerSwipe(true),
         ),
         const SizedBox(height: 12),

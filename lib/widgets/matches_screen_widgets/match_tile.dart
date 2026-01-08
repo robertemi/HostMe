@@ -41,27 +41,9 @@ class MatchTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            match.timeAgo,
-            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-          ),
-          if (match.unreadCount > 0)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                match.unreadCount.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-        ],
+      trailing: Text(
+        match.timeAgo,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
       ),
       onTap: () {
         // pass receiver info to ChatScreen

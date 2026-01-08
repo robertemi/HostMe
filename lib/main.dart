@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 // foundation imports removed (no platform-gated Firebase initialization)
 import 'package:supabase_flutter/supabase_flutter.dart';
 // Firebase packages removed — app uses local notifications only
@@ -30,12 +31,21 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      };
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scrollBehavior: AppScrollBehavior(),
       title: 'HostMe',
       theme: AppTheme.glassTheme,
       builder: (context, child) => LiquidGlassBackground(child: child),
