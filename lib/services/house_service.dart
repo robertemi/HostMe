@@ -29,4 +29,26 @@ class HouseService {
         .map((json) => House.fromJson(json as Map<String, dynamic>))
         .toList();
   }
+
+  /// Fetch all houses listed by a specific user.
+  Future<List<House>> getHousesForUser(String userId) async {
+    final List<dynamic> response = await _supabase
+        .from('houses')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+
+    return response
+        .map((json) => House.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Delete a house that belongs to the given user.
+  Future<void> deleteHouse({required String houseId, required String userId}) async {
+    await _supabase
+        .from('houses')
+        .delete()
+        .eq('id', houseId)
+        .eq('user_id', userId);
+  }
 }

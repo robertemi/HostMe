@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/profile_service.dart';
 import '../../models/profile_model.dart';
+import '../../services/house_service.dart';
+import '../../models/house_model.dart';
+import '../../utils/notifications.dart';
+import '../../models/match_result.dart';
+import '../../screens/property_detail_screen.dart';
 
 class ActivitySection extends StatefulWidget {
   const ActivitySection({super.key});
@@ -13,6 +18,8 @@ class ActivitySection extends StatefulWidget {
 class _ActivitySectionState extends State<ActivitySection> {
   List<ProfileModel> _matches = [];
   List<ProfileModel> _swipes = [];
+  List<House> _listedHouses = [];
+  ProfileModel? _currentUserProfile;
   bool _loading = true;
   int _tabIndex = 0;
 
@@ -26,13 +33,18 @@ class _ActivitySectionState extends State<ActivitySection> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
       final service = ProfileService();
+      final houseService = HouseService();
       try {
         final matches = await service.getMatches(user.id);
         final swipes = await service.getSwipedProfiles(user.id);
+        final houses = await houseService.getHousesForUser(user.id);
+        final me = await service.fetchProfile(user.id);
         if (mounted) {
           setState(() {
             _matches = matches;
             _swipes = swipes;
+            _listedHouses = houses;
+            _currentUserProfile = me;
             _loading = false;
           });
         }
@@ -42,6 +54,64 @@ class _ActivitySectionState extends State<ActivitySection> {
       }
     } else {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _openHouseDetails(House house) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    final host = MatchResult(
+      userId: user.id,
+      matchScore: 0,
+      budgetScore: 0,
+      lifestyleScore: 0,
+      fullName: _currentUserProfile?.fullName ?? 'Host',
+    );
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PropertyDetailScreen(
+          house: house,
+          host: host,
+          hostProfile: _currentUserProfile,
+          hidePropertyTab: false,
+          hideHostProfileTab: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteHouse(House house) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete property?'),
+        content: const Text('This will remove the listing from the database.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await HouseService().deleteHouse(houseId: house.id, userId: user.id);
+      if (!mounted) return;
+      setState(() {
+        _listedHouses.removeWhere((h) => h.id == house.id);
+      });
+      await showAppSuccess(context, 'Property deleted');
+    } catch (e) {
+      if (!mounted) return;
+      await showAppDetailedError(context, e, title: 'Failed to delete property');
     }
   }
 
@@ -67,10 +137,15 @@ class _ActivitySectionState extends State<ActivitySection> {
         const SizedBox(height: 12),
         if (_loading)
           const Center(child: CircularProgressIndicator())
+        else if (_tabIndex == 2)
+          _ListedPropertiesList(
+            houses: _listedHouses,
+            onDelete: _deleteHouse,
+            onOpen: _openHouseDetails,
+          )
         else
           _MatchesGrid(
-            profiles: _tabIndex == 0 ? _matches : (_tabIndex == 1 ? _swipes : []),
-            isLocked: _tabIndex == 2, // "Liked You" is locked/static for now
+            profiles: _tabIndex == 0 ? _matches : _swipes,
           ),
       ],
     );
@@ -90,7 +165,7 @@ class _Tabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labels = ['Matches', 'Past Swipes', 'Liked You'];
+    final labels = ['Matches', 'Past Swipes', 'Listed Properties'];
     return Row(
       children: [
         for (int i = 0; i < labels.length; i++)
@@ -142,32 +217,71 @@ class _Tabs extends StatelessWidget {
   }
 }
 
-class _MatchesGrid extends StatelessWidget {
-  final List<ProfileModel> profiles;
-  final bool isLocked;
+class _ListedPropertiesList extends StatelessWidget {
+  final List<House> houses;
+  final Future<void> Function(House house) onDelete;
+  final Future<void> Function(House house) onOpen;
 
-  const _MatchesGrid({required this.profiles, this.isLocked = false});
+  const _ListedPropertiesList({required this.houses, required this.onDelete, required this.onOpen});
 
   @override
   Widget build(BuildContext context) {
-    if (isLocked) {
-       return Container(
-         padding: const EdgeInsets.all(32),
-         alignment: Alignment.center,
-         child: Column(
-           children: [
-             const Icon(Icons.lock, color: Colors.white54, size: 48),
-             const SizedBox(height: 16),
-             const Text(
-               "Upgrade to see who liked you!",
-               style: TextStyle(color: Colors.white70, fontSize: 16),
-               textAlign: TextAlign.center,
-             ),
-           ],
-         ),
-       );
+    if (houses.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(child: Text('No listed properties yet.', style: TextStyle(color: Colors.white54))),
+      );
     }
-    
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: houses.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, i) {
+        final house = houses[i];
+        final subtitleParts = <String>[];
+        if (house.rent != null) subtitleParts.add('\$${house.rent!.toStringAsFixed(0)}/mo');
+        if (house.numberOfRooms != null) subtitleParts.add('${house.numberOfRooms} rooms');
+        final subtitle = subtitleParts.isEmpty ? null : subtitleParts.join(' • ');
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: ListTile(
+            title: Text(
+              house.address ?? 'Property',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+            subtitle: subtitle == null
+                ? null
+                : Text(
+                    subtitle,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+            trailing: IconButton(
+              tooltip: 'Delete',
+              icon: const Icon(Icons.delete_outline, color: Colors.white70),
+              onPressed: () => onDelete(house),
+            ),
+            onTap: () => onOpen(house),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MatchesGrid extends StatelessWidget {
+  final List<ProfileModel> profiles;
+
+  const _MatchesGrid({required this.profiles});
+
+  @override
+  Widget build(BuildContext context) {
     if (profiles.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(32.0),
