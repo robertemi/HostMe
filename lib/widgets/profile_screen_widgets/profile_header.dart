@@ -5,7 +5,7 @@ class ProfileHeader extends StatelessWidget implements PreferredSizeWidget {
 
   final VoidCallback? onEdit;
 
-  onEditPressed() {
+  void onEditPressed() {
     if (onEdit != null) {
       onEdit!();
     }

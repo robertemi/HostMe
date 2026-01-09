@@ -568,9 +568,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen>
   // Helper: Format budget range
   String _formatBudgetRange(int? min, int? max) {
     if (min == null && max == null) return 'Not set';
-    if (min != null && max != null) return '\$$min–\$$max';
-    if (min != null) return '\$$min+';
-    if (max != null) return 'Up to \$$max';
+    if (min != null && max != null) return '\€$min–\€$max';
+    if (min != null) return '\€$min+';
+    if (max != null) return 'Up to \€$max';
     return 'Not set';
   }
 

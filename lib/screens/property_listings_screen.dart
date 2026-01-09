@@ -50,7 +50,7 @@ class _PropertyListingsScreenState extends State<PropertyListingsScreen> {
               position: LatLng(house.latitude!, house.longitude!),
               infoWindow: InfoWindow(
                 title: house.address ?? 'House Listing',
-                snippet: '${house.rent != null ? '\€${house.rent!.toStringAsFixed(0)}/mo' : 'Price on request'} • ${kIsWeb ? "Click" : "Tap"} for details',
+                snippet: '${house.rent != null ? '€${house.rent!.toStringAsFixed(0)}/mo' : 'Price on request'} • ${kIsWeb ? "Click" : "Tap"} for details',
                 onTap: () => _onMarkerTapped(house),
               ),
             ),
