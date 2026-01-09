@@ -7,6 +7,7 @@ import '../widgets/roommate_finder_widgets/swipeable_card.dart';
 import '../services/matching_service.dart';
 import '../models/match_result.dart';
 import './property_detail_screen.dart'; // <-- Make sure this exists
+import './chat_screen.dart';
 import '../services/house_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_service.dart';
@@ -283,18 +284,28 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
         showDialog(
           context: context,
           barrierColor: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.72),
-          builder: (context) => AlertDialog(
+          builder: (dialogContext) => AlertDialog(
             title: const Text('It\'s a Match! 🎉'),
             content: Text('You and ${match.fullName} liked each other!'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: const Text('Keep Swiping'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: Navigate to Chat
+                  Navigator.pop(dialogContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        receiverId: match.userId,
+                        receiverName: match.fullName ?? 'Unknown',
+                        receiverAvatar: match.avatarUrl ??
+                            'https://ui-avatars.com/api/?name=${match.fullName ?? 'User'}',
+                      ),
+                    ),
+                  );
                 },
                 child: const Text('Send Message'),
               ),

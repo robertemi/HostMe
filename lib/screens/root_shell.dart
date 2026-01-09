@@ -66,16 +66,34 @@ class _RootShellState extends State<RootShell> {
             column: 'receiver_id',
             value: userId,
           ),
-          callback: (payload) {
+          callback: (payload) async {
             print('DEBUG: Received new message payload: ${payload.newRecord}');
             final msg = payload.newRecord;
             // Don't show notification if we are on the matches screen (index 2)
             // Ideally we check if we are in the specific chat, but this is a simple check
             if (_currentIndex != 2) {
+              String senderName = 'Someone';
+              try {
+                final senderId = msg['sender_id'];
+                if (senderId != null) {
+                  final senderProfile = await _supabase
+                      .from('profiles')
+                      .select('full_name')
+                      .eq('id', senderId)
+                      .maybeSingle();
+                  
+                  if (senderProfile != null && senderProfile['full_name'] != null) {
+                    senderName = senderProfile['full_name'];
+                  }
+                }
+              } catch (e) {
+                print('Error fetching sender name: $e');
+              }
+
               print('DEBUG: Showing notification for message');
               NotificationService().showNotification(
                 id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-                title: 'New Message',
+                title: 'New Message from $senderName',
                 body: msg['text'] ?? 'You have a new message',
                 payload: 'chat',
               );
