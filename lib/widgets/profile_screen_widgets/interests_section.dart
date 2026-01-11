@@ -5,10 +5,12 @@ class InterestsSection extends StatelessWidget {
     super.key,
     required this.interests,
     required this.onChanged,
+    this.isReadOnly = false,
   });
 
   final List<String> interests;
   final ValueChanged<List<String>> onChanged;
+  final bool isReadOnly;
 
   // Modal for adding a new interest
   Future<void> _addInterest(BuildContext context) async {
@@ -68,33 +70,36 @@ class InterestsSection extends StatelessWidget {
               for (final interest in interests)
                 _InterestChip(
                   label: interest,
-                  onRemove: () {
-                    final newList = List<String>.from(interests)..remove(interest);
-                    onChanged(newList);
-                  },
+                  onRemove: isReadOnly
+                      ? null
+                      : () {
+                          final newList = List<String>.from(interests)..remove(interest);
+                          onChanged(newList);
+                        },
                 ),
-              GestureDetector(
-                onTap: () => _addInterest(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  height: 32,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: Colors.white54, style: BorderStyle.solid),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.add, size: 18, color: Colors.white70),
-                      SizedBox(width: 4),
-                      Text(
-                        'Add',
-                        style: TextStyle( color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                    ],
+              if (!isReadOnly)
+                GestureDetector(
+                  onTap: () => _addInterest(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    height: 32,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: Colors.white54, style: BorderStyle.solid),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.add, size: 18, color: Colors.white70),
+                        SizedBox(width: 4),
+                        Text(
+                          'Add',
+                          style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -103,12 +108,11 @@ class InterestsSection extends StatelessWidget {
   }
 }
 
-
 class _InterestChip extends StatelessWidget {
-  const _InterestChip({required this.label, required this.onRemove});
+  const _InterestChip({required this.label, this.onRemove});
 
   final String label;
-  final VoidCallback onRemove;
+  final VoidCallback? onRemove;
 // Chip UI for an interest in the interests section
   @override
   Widget build(BuildContext context) {
@@ -131,15 +135,17 @@ class _InterestChip extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: onRemove,
-            child: const Icon(
-              Icons.close,
-              size: 16,
-              color: Colors.white70,
+          if (onRemove != null) ...[
+            const SizedBox(width: 6),
+            GestureDetector(
+              onTap: onRemove,
+              child: const Icon(
+                Icons.close,
+                size: 16,
+                color: Colors.white70,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

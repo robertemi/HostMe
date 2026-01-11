@@ -25,23 +25,24 @@ class ProfileAvatarSection extends StatelessWidget {
               radius: 56,
               backgroundImage: NetworkImage(imageUrl),
             ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: InkWell(
-                onTap: onEditAvatar,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  height: 32,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    shape: BoxShape.circle,
+            if (onEditAvatar != null)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: InkWell(
+                  onTap: onEditAvatar,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: 32,
+                    width: 32,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
                   ),
-                  child: const Icon(Icons.edit, color: Colors.white, size: 18),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 12),

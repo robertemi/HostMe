@@ -75,7 +75,7 @@ class ProfileService {
     try {
       final response = await _client
           .from('swipes')
-          .select('profiles!swipes_target_id_fkey(*)')
+          .select('profiles!swipes_target_id_fkey(*, profile_interests(interests(name)))')
           .eq('liker_id', userId)
           .eq('is_like', true)
           .order('created_at', ascending: false);
@@ -94,8 +94,8 @@ class ProfileService {
       final response = await _client
           .from('matches')
           .select('''
-            user1:profiles!matches_user1_id_fkey(*),
-            user2:profiles!matches_user2_id_fkey(*)
+            user1:profiles!matches_user1_id_fkey(*, profile_interests(interests(name))),
+            user2:profiles!matches_user2_id_fkey(*, profile_interests(interests(name)))
           ''')
           .or('user1_id.eq.$userId,user2_id.eq.$userId')
           .order('created_at', ascending: false);

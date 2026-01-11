@@ -7,6 +7,10 @@ import '../../models/house_model.dart';
 import '../../utils/notifications.dart';
 import '../../models/match_result.dart';
 import '../../screens/property_detail_screen.dart';
+import 'profile_avatar_section.dart';
+import 'interests_section.dart';
+import 'preferences_section.dart';
+import 'about_section.dart';
 
 class ActivitySection extends StatefulWidget {
   const ActivitySection({super.key});
@@ -289,7 +293,8 @@ class _MatchesGrid extends StatelessWidget {
       );
     }
 
-    final crossAxisCount = MediaQuery.of(context).size.width > 600 ? 4 : 2;
+    // Increased crossAxisCount to make tiles smaller (downscaled)
+    final crossAxisCount = MediaQuery.of(context).size.width > 600 ? 5 : 3;
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -308,6 +313,98 @@ class _MatchesGrid extends StatelessWidget {
 class _GridTile extends StatelessWidget {
   const _GridTile({required this.profile});
   final ProfileModel profile;
+
+  void _showProfileModal(BuildContext context) {
+    // Helper to compute budget level
+    double computeBudgetLevel(int? min, int? max) {
+      if (min == null && max == null) return 3;
+      final values = [
+        if (min != null) min.toDouble(),
+        if (max != null) max.toDouble(),
+      ];
+      final v = values.isEmpty ? 0 : (values.reduce((a, b) => a + b) / values.length);
+      if (v <= 100) return 1;
+      if (v <= 300) return 2;
+      if (v <= 500) return 3;
+      if (v <= 1000) return 4;
+      return 5;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // Match theme
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        // Use DraggableScrollableSheet for flexible height
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   // Handle at top
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Avatar + Bio
+                  Center(
+                    child: ProfileAvatarSection(
+                      imageUrl: profile.avatarUrl ?? "",
+                      name: profile.fullName ?? 'User',
+                      bio: profile.bio ?? 'No bio.',
+                      onEditAvatar: null, // Read-only: hide edit icon
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // About Section
+                  AboutSection(
+                    occupation: profile.occupation,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Interests Section
+                  InterestsSection(
+                    interests: profile.interests ?? [],
+                    onChanged: (_) {}, // Read-only no-op
+                    isReadOnly: true,  // Hide add button and remove icons
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Preferences Section
+                  PreferencesSection(
+                    budgetLevel: computeBudgetLevel(profile.budgetMin, profile.budgetMax),
+                    cleanlinessLevel: (profile.cleanlinessLevel ?? 3).toDouble(),
+                    noiseLevel: (profile.noiseLevel ?? 3).toDouble(),
+                    smoking: profile.smokingPreference ?? false,
+                    pets: profile.petsPreference ?? false,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -316,35 +413,38 @@ class _GridTile extends StatelessWidget {
         : null;
     final label = '${profile.fullName?.split(' ').first ?? 'User'}${age != null ? ', $age' : ''}';
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
-                    ? Image.network(profile.avatarUrl!, fit: BoxFit.cover)
-                    : Container(
-                        color: Colors.grey[800],
-                        child: const Icon(Icons.person, color: Colors.white, size: 48),
-                      ),
-              ],
+    return GestureDetector(
+      onTap: () => _showProfileModal(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty
+                      ? Image.network(profile.avatarUrl!, fit: BoxFit.cover)
+                      : Container(
+                          color: Colors.grey[800],
+                          child: const Icon(Icons.person, color: Colors.white, size: 48),
+                        ),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

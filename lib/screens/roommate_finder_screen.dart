@@ -33,11 +33,29 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
   List<MatchResult> _matches = [];
   bool _isLoading = true;
   String? _error;
+  String? _currentUserName;
 
   @override
   void initState() {
     super.initState();
     _loadMatches();
+    _loadCurrentUserName();
+  }
+
+  Future<void> _loadCurrentUserName() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final profile = await ProfileService().fetchProfile(user.id);
+        if (mounted) {
+          setState(() {
+            _currentUserName = profile?.fullName;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading current user name: $e');
+    }
   }
 
   Future<void> _loadMatches() async {
@@ -286,7 +304,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
           barrierColor: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.72),
           builder: (dialogContext) => AlertDialog(
             title: const Text('It\'s a Match! 🎉'),
-            content: Text('You and ${match.fullName} liked each other!'),
+            content: Text('You and ${_currentUserName ?? 'Sender'} liked each other!'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
